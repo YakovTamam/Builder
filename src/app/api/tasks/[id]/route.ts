@@ -1,24 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import Project from "@/models/Project";
+import { getAccessibleTask, MANAGE_ROLES } from "@/lib/access";
 import Task, { TASK_PRIORITIES, TASK_STATUSES } from "@/models/Task";
-
-const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
-
-async function loadAccessibleTask(id: string, session: { companyId?: string; role: string; sub: string }) {
-  const task = await Task.findById(id);
-  if (!task) return null;
-
-  const project = await Project.findOne({ _id: task.projectId, companyId: session.companyId });
-  if (!project) return null;
-
-  if (session.role === "project_manager" && project.managerId?.toString() !== session.sub) {
-    return null;
-  }
-
-  return { task, project };
-}
+import TaskCollaborator from "@/models/TaskCollaborator";
+import ActivityLog from "@/models/ActivityLog";
 
 export async function GET(
   _request: Request,
@@ -31,7 +17,7 @@ export async function GET(
 
   await connectToDatabase();
   const { id } = await params;
-  const result = await loadAccessibleTask(id, session);
+  const result = await getAccessibleTask(id, session);
 
   if (!result) {
     return NextResponse.json({ error: "משימה לא נמצאה" }, { status: 404 });
@@ -39,7 +25,7 @@ export async function GET(
 
   const children = await Task.find({ parentTaskId: id }).sort({ sequenceOrder: 1 }).lean();
 
-  return NextResponse.json({ task: result.task, children });
+  return NextResponse.json({ task: result.task, children, permission: result.permission });
 }
 
 export async function PATCH(
@@ -53,17 +39,27 @@ export async function PATCH(
 
   await connectToDatabase();
   const { id } = await params;
-  const result = await loadAccessibleTask(id, session);
+  const result = await getAccessibleTask(id, session);
 
   if (!result) {
     return NextResponse.json({ error: "משימה לא נמצאה" }, { status: 404 });
   }
 
-  const { task } = result;
+  const { task, permission } = result;
   const isManager = MANAGE_ROLES.includes(session.role);
 
   const body = await request.json();
-  const { title, description, status, priority, dueDate, stage, durationHours, workersCount } = body as {
+  const {
+    title,
+    description,
+    status,
+    priority,
+    dueDate,
+    stage,
+    durationHours,
+    workersCount,
+    assignedTo,
+  } = body as {
     title?: string;
     description?: string;
     status?: string;
@@ -72,13 +68,21 @@ export async function PATCH(
     stage?: string;
     durationHours?: number;
     workersCount?: number;
+    assignedTo?: string | null;
   };
 
+  let previousStatus: string | undefined;
   if (status !== undefined) {
+    if (permission === "view") {
+      return NextResponse.json({ error: "אין הרשאה לעדכן סטטוס" }, { status: 403 });
+    }
     if (!TASK_STATUSES.includes(status as (typeof TASK_STATUSES)[number])) {
       return NextResponse.json({ error: "סטטוס לא תקין" }, { status: 400 });
     }
-    task.status = status as (typeof TASK_STATUSES)[number];
+    if (task.status !== status) {
+      previousStatus = task.status;
+      task.status = status as (typeof TASK_STATUSES)[number];
+    }
   }
 
   // Only project managers/admins can edit the task definition itself.
@@ -95,9 +99,22 @@ export async function PATCH(
     if (stage !== undefined) task.stage = stage;
     if (durationHours !== undefined) task.durationHours = durationHours;
     if (workersCount !== undefined) task.workersCount = workersCount;
+    if (assignedTo !== undefined) task.assignedTo = assignedTo || undefined;
   }
 
   await task.save();
+
+  if (previousStatus) {
+    await ActivityLog.create({
+      companyId: result.project.companyId,
+      projectId: result.project._id,
+      userId: session.sub,
+      action: "status_changed",
+      entityType: "Task",
+      entityId: task._id,
+      metadata: { from: previousStatus, to: task.status },
+    });
+  }
 
   return NextResponse.json({ task });
 }
@@ -113,13 +130,14 @@ export async function DELETE(
 
   await connectToDatabase();
   const { id } = await params;
-  const result = await loadAccessibleTask(id, session);
+  const result = await getAccessibleTask(id, session);
 
   if (!result) {
     return NextResponse.json({ error: "משימה לא נמצאה" }, { status: 404 });
   }
 
   await Task.deleteMany({ $or: [{ _id: id }, { parentTaskId: id }] });
+  await TaskCollaborator.deleteMany({ taskId: id });
 
   return NextResponse.json({ ok: true });
 }

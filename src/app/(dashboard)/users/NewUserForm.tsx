@@ -3,11 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const ROLE_OPTIONS = [
+  { value: "project_manager", label: "מנהל פרויקט" },
+  { value: "field_worker", label: "עובד שטח" },
+  { value: "consultant", label: "יועץ" },
+];
+
 export default function NewUserForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("project_manager");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +29,7 @@ export default function NewUserForm() {
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role: "project_manager" }),
+        body: JSON.stringify({ name, email, password, role }),
       });
 
       const data = await res.json();
@@ -88,10 +95,21 @@ export default function NewUserForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-sm text-zinc-300">תפקיד</label>
-        <div className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-400">
-          מנהל פרויקט
-        </div>
+        <label htmlFor="role" className="text-sm text-zinc-300">
+          תפקיד
+        </label>
+        <select
+          id="role"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        >
+          {ROLE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {error && <p className="text-sm text-red-400 sm:col-span-2 lg:col-span-4">{error}</p>}
@@ -102,7 +120,7 @@ export default function NewUserForm() {
         disabled={loading}
         className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50 sm:col-span-2 lg:col-span-4"
       >
-        {loading ? "יוצר..." : "הוסף מנהל פרויקט"}
+        {loading ? "יוצר..." : "הוסף משתמש"}
       </button>
     </form>
   );

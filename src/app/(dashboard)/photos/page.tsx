@@ -1,10 +1,42 @@
-export default function PhotosPage() {
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
+import { connectToDatabase } from "@/lib/db";
+import Project from "@/models/Project";
+import { projectListFilter } from "@/lib/access";
+import PhotoGallery from "./PhotoGallery";
+
+export const dynamic = "force-dynamic";
+
+export default async function PhotosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ projectId?: string }>;
+}) {
+  const session = await getSession();
+  if (!session) {
+    redirect("/login");
+  }
+
+  await connectToDatabase();
+
+  const projects = await Project.find(projectListFilter(session)).sort({ createdAt: -1 }).lean();
+  const { projectId } = await searchParams;
+  const selectedProjectId = projectId ?? (projects[0] ? String(projects[0]._id) : undefined);
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold">תמונות מהשטח</h1>
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-400 text-sm">
-        בקרוב — מסך תמונות מהשטח.
-      </div>
+
+      {projects.length === 0 ? (
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-400 text-sm">
+          אין פרויקטים עדיין. יש ליצור פרויקט כדי להעלות תמונות.
+        </div>
+      ) : (
+        <PhotoGallery
+          projects={projects.map((p) => ({ _id: String(p._id), name: p.name }))}
+          selectedProjectId={selectedProjectId}
+        />
+      )}
     </div>
   );
 }

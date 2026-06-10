@@ -5,6 +5,7 @@ export const ROLES = [
   "company_admin",
   "project_manager",
   "field_worker",
+  "consultant",
   "client",
 ] as const;
 

@@ -4,7 +4,7 @@ import { connectToDatabase } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import User, { ROLES } from "@/models/User";
 
-const ASSIGNABLE_ROLES = ["project_manager"] as const;
+const ASSIGNABLE_ROLES = ["project_manager", "field_worker", "consultant"] as const;
 
 export async function GET() {
   const session = await getSession();
