@@ -1,0 +1,15 @@
+name: Check alerts
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger alerts scan
+        run: |
+          curl -sf -X POST "${{ secrets.ALERTS_SCAN_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.ALERTS_CRON_SECRET }}"
