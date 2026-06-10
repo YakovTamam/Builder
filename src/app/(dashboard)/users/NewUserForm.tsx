@@ -1,0 +1,109 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function NewUserForm() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, role: "project_manager" }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "שגיאה ביצירת משתמש");
+        return;
+      }
+
+      setSuccess(`המשתמש ${data.user.name} נוצר בהצלחה`);
+      setName("");
+      setEmail("");
+      setPassword("");
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+      <div className="flex flex-col gap-1">
+        <label htmlFor="name" className="text-sm text-zinc-300">
+          שם מלא
+        </label>
+        <input
+          id="name"
+          type="text"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="email" className="text-sm text-zinc-300">
+          אימייל
+        </label>
+        <input
+          id="email"
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="password" className="text-sm text-zinc-300">
+          סיסמה זמנית
+        </label>
+        <input
+          id="password"
+          type="password"
+          required
+          minLength={8}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-sm text-zinc-300">תפקיד</label>
+        <div className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-400">
+          מנהל פרויקט
+        </div>
+      </div>
+
+      {error && <p className="text-sm text-red-400 sm:col-span-2 lg:col-span-4">{error}</p>}
+      {success && <p className="text-sm text-emerald-400 sm:col-span-2 lg:col-span-4">{success}</p>}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50 sm:col-span-2 lg:col-span-4"
+      >
+        {loading ? "יוצר..." : "הוסף מנהל פרויקט"}
+      </button>
+    </form>
+  );
+}
