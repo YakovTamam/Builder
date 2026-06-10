@@ -88,7 +88,12 @@ export default async function ProjectDetailPage({
 
       <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
         <h2 className="text-lg font-medium mb-2">משימות</h2>
-        <p className="text-zinc-400 text-sm">בקרוב — ניהול משימות לפרויקט זה.</p>
+        <Link
+          href={`/tasks?projectId=${project._id}`}
+          className="inline-block rounded-lg border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors"
+        >
+          ניהול משימות לפרויקט זה
+        </Link>
       </div>
 
       {canManage && (

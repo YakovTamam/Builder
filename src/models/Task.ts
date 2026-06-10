@@ -2,6 +2,7 @@ import { Schema, model, models, type InferSchemaType } from "mongoose";
 
 export const TASK_STATUSES = ["todo", "in_progress", "review", "done"] as const;
 export const TASK_PRIORITIES = ["low", "medium", "high"] as const;
+export const TASK_TYPES = ["single", "sequence"] as const;
 
 const taskSchema = new Schema(
   {
@@ -21,6 +22,13 @@ const taskSchema = new Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
+    // type: "single" - independent task. "sequence" - generates a chain of follow-up tasks.
+    type: { type: String, enum: TASK_TYPES, default: "single" },
+    durationHours: { type: Number, min: 0 },
+    workersCount: { type: Number, min: 0 },
+    // Links generated child tasks back to the sequence task that created them.
+    parentTaskId: { type: Schema.Types.ObjectId, ref: "Task" },
+    sequenceOrder: { type: Number },
   },
   { timestamps: true },
 );
