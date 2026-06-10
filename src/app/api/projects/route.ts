@@ -1,0 +1,64 @@
+import { NextResponse } from "next/server";
+import { connectToDatabase } from "@/lib/db";
+import { getSession } from "@/lib/session";
+import Project, { PROJECT_STATUSES } from "@/models/Project";
+
+const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
+
+export async function GET() {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "אין הרשאה" }, { status: 401 });
+  }
+
+  await connectToDatabase();
+
+  const filter: Record<string, unknown> = { companyId: session.companyId };
+  if (session.role === "project_manager") {
+    filter.managerId = session.sub;
+  }
+
+  const projects = await Project.find(filter).sort({ createdAt: -1 }).lean();
+  return NextResponse.json({ projects });
+}
+
+export async function POST(request: Request) {
+  const session = await getSession();
+  if (!session || !MANAGE_ROLES.includes(session.role)) {
+    return NextResponse.json({ error: "אין הרשאה" }, { status: 403 });
+  }
+
+  await connectToDatabase();
+
+  const body = await request.json();
+  const { name, address, status, budget, startDate, dueDate } = body as {
+    name?: string;
+    address?: string;
+    status?: string;
+    budget?: number;
+    startDate?: string;
+    dueDate?: string;
+  };
+
+  if (!name) {
+    return NextResponse.json({ error: "שם הפרויקט הוא שדה חובה" }, { status: 400 });
+  }
+
+  if (status && !PROJECT_STATUSES.includes(status as (typeof PROJECT_STATUSES)[number])) {
+    return NextResponse.json({ error: "סטטוס לא תקין" }, { status: 400 });
+  }
+
+  const project = await Project.create({
+    companyId: session.companyId,
+    name,
+    address,
+    status: status ?? "planning",
+    budget,
+    startDate: startDate ? new Date(startDate) : undefined,
+    dueDate: dueDate ? new Date(dueDate) : undefined,
+    managerId: session.sub,
+    progress: 0,
+  });
+
+  return NextResponse.json({ project });
+}
