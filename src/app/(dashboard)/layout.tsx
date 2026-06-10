@@ -22,6 +22,7 @@ const BASE_NAV_ITEMS = [
 ];
 
 const ADMIN_NAV_ITEM = { href: "/users", label: "משתמשים", icon: "👥" };
+const SUPER_ADMIN_NAV_ITEM = { href: "/settings", label: "הגדרות", icon: "⚙️" };
 
 const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
 
@@ -35,7 +36,10 @@ export default async function DashboardLayout({
   }
 
   const isAdmin = session.role === "super_admin" || session.role === "company_admin";
-  const navItems = isAdmin ? [...BASE_NAV_ITEMS, ADMIN_NAV_ITEM] : BASE_NAV_ITEMS;
+  const navItems = isAdmin ? [...BASE_NAV_ITEMS, ADMIN_NAV_ITEM] : [...BASE_NAV_ITEMS];
+  if (session.role === "super_admin") {
+    navItems.push(SUPER_ADMIN_NAV_ITEM);
+  }
   const canManage = MANAGE_ROLES.includes(session.role);
 
   return (
