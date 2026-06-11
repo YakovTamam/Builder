@@ -28,7 +28,14 @@ export default async function TemplatesPage() {
         templates={templates.map((t) => ({
           _id: String(t._id),
           name: t.name,
-          items: (t.items ?? []).map((item) => ({
+          items: (t.items ?? []).map((item: {
+            title: string;
+            description?: string;
+            priority?: string;
+            durationHours?: number;
+            workersCount?: number;
+            checklist?: string[];
+          }) => ({
             title: item.title,
             description: item.description,
             priority: item.priority ?? "medium",

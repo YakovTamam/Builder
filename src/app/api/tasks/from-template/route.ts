@@ -31,7 +31,14 @@ export async function POST(request: Request) {
   }
 
   const tasks = await Task.insertMany(
-    template.items.map((item) => ({
+    template.items.map((item: {
+      title: string;
+      description?: string;
+      priority?: string;
+      durationHours?: number;
+      workersCount?: number;
+      checklist?: string[];
+    }) => ({
       projectId,
       title: item.title,
       description: item.description,

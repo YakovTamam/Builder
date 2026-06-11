@@ -61,8 +61,11 @@ export default async function EditTaskPage({
             stage: task.stage,
             durationHours: task.durationHours,
             workersCount: task.workersCount,
-            dependsOn: (task.dependsOn ?? []).map((id) => String(id)),
-            checklist: (task.checklist ?? []).map((item) => ({ text: item.text, done: !!item.done })),
+            dependsOn: (task.dependsOn ?? []).map((depId: unknown) => String(depId)),
+            checklist: (task.checklist ?? []).map((item: { text: string; done?: boolean }) => ({
+              text: item.text,
+              done: !!item.done,
+            })),
           }}
           siblingTasks={siblingTasks.map((t) => ({ _id: String(t._id), title: t.title }))}
         />

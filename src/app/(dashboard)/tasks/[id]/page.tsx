@@ -135,7 +135,10 @@ export default async function TaskDetailPage({
 
       <TaskChecklist
         taskId={String(task._id)}
-        checklist={(task.checklist ?? []).map((item) => ({ text: item.text, done: !!item.done }))}
+        checklist={(task.checklist ?? []).map((item: { text: string; done?: boolean }) => ({
+          text: item.text,
+          done: !!item.done,
+        }))}
         canEdit={canComment}
       />
 
