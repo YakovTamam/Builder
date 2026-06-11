@@ -16,6 +16,8 @@ function toDateInputValue(value?: string | Date | null) {
   return date.toISOString().slice(0, 10);
 }
 
+type ChecklistItem = { text: string; done: boolean };
+
 type TaskValues = {
   _id: string;
   title: string;
@@ -25,9 +27,17 @@ type TaskValues = {
   stage?: string;
   durationHours?: number;
   workersCount?: number;
+  dependsOn?: string[];
+  checklist?: ChecklistItem[];
 };
 
-export default function TaskEditForm({ task }: { task: TaskValues }) {
+export default function TaskEditForm({
+  task,
+  siblingTasks = [],
+}: {
+  task: TaskValues;
+  siblingTasks?: { _id: string; title: string }[];
+}) {
   const router = useRouter();
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
@@ -36,8 +46,25 @@ export default function TaskEditForm({ task }: { task: TaskValues }) {
   const [stage, setStage] = useState(task.stage ?? "");
   const [durationHours, setDurationHours] = useState(task.durationHours?.toString() ?? "");
   const [workersCount, setWorkersCount] = useState(task.workersCount?.toString() ?? "");
+  const [dependsOn, setDependsOn] = useState<string[]>(task.dependsOn ?? []);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist ?? []);
+  const [newChecklistItem, setNewChecklistItem] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  function toggleDependency(id: string) {
+    setDependsOn((prev) => (prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]));
+  }
+
+  function addChecklistItem() {
+    if (!newChecklistItem.trim()) return;
+    setChecklist((prev) => [...prev, { text: newChecklistItem.trim(), done: false }]);
+    setNewChecklistItem("");
+  }
+
+  function removeChecklistItem(index: number) {
+    setChecklist((prev) => prev.filter((_, i) => i !== index));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,6 +83,8 @@ export default function TaskEditForm({ task }: { task: TaskValues }) {
           stage: stage || undefined,
           durationHours: durationHours ? Number(durationHours) : undefined,
           workersCount: workersCount ? Number(workersCount) : undefined,
+          dependsOn,
+          checklist,
         }),
       });
 
@@ -175,6 +204,61 @@ export default function TaskEditForm({ task }: { task: TaskValues }) {
             onChange={(e) => setStage(e.target.value)}
             className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-sm text-zinc-300">משימות חוסמות (תלות)</label>
+        {siblingTasks.length === 0 ? (
+          <p className="text-xs text-zinc-500">אין משימות אחרות בפרויקט</p>
+        ) : (
+          <div className="flex flex-col gap-1 max-h-48 overflow-y-auto rounded-lg border border-zinc-700 p-2">
+            {siblingTasks.map((sibling) => (
+              <label key={sibling._id} className="flex items-center gap-2 text-sm px-1 py-1">
+                <input
+                  type="checkbox"
+                  checked={dependsOn.includes(sibling._id)}
+                  onChange={() => toggleDependency(sibling._id)}
+                  className="accent-emerald-600"
+                />
+                {sibling.title}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className="text-sm text-zinc-300">רשימת בדיקה</label>
+        <div className="flex flex-col gap-1">
+          {checklist.map((item, index) => (
+            <div key={index} className="flex items-center gap-2 text-sm">
+              <span className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2">{item.text}</span>
+              <button
+                type="button"
+                onClick={() => removeChecklistItem(index)}
+                className="text-red-400 hover:text-red-300 text-sm px-2"
+              >
+                הסר
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={newChecklistItem}
+            onChange={(e) => setNewChecklistItem(e.target.value)}
+            placeholder="פריט חדש"
+            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+          <button
+            type="button"
+            onClick={addChecklistItem}
+            className="text-xs text-emerald-400 hover:text-emerald-300 px-2"
+          >
+            + הוסף
+          </button>
         </div>
       </div>
 

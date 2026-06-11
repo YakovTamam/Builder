@@ -59,6 +59,8 @@ export async function PATCH(
     durationHours,
     workersCount,
     assignedTo,
+    checklist,
+    dependsOn,
   } = body as {
     title?: string;
     description?: string;
@@ -69,6 +71,8 @@ export async function PATCH(
     durationHours?: number;
     workersCount?: number;
     assignedTo?: string | null;
+    checklist?: { text: string; done: boolean }[];
+    dependsOn?: string[];
   };
 
   let previousStatus: string | undefined;
@@ -79,10 +83,23 @@ export async function PATCH(
     if (!TASK_STATUSES.includes(status as (typeof TASK_STATUSES)[number])) {
       return NextResponse.json({ error: "סטטוס לא תקין" }, { status: 400 });
     }
+    if (status !== "todo" && task.dependsOn && task.dependsOn.length > 0) {
+      const blockers = await Task.find({ _id: { $in: task.dependsOn }, status: { $ne: "done" } }).countDocuments();
+      if (blockers > 0) {
+        return NextResponse.json({ error: "לא ניתן להתקדם - יש משימות קודמות שטרם הושלמו" }, { status: 400 });
+      }
+    }
     if (task.status !== status) {
       previousStatus = task.status;
       task.status = status as (typeof TASK_STATUSES)[number];
     }
+  }
+
+  if (checklist !== undefined) {
+    if (permission === "view") {
+      return NextResponse.json({ error: "אין הרשאה לעדכן רשימת משימות" }, { status: 403 });
+    }
+    task.checklist = checklist.map((item) => ({ text: item.text, done: !!item.done }));
   }
 
   // Only project managers/admins can edit the task definition itself.
@@ -100,6 +117,7 @@ export async function PATCH(
     if (durationHours !== undefined) task.durationHours = durationHours;
     if (workersCount !== undefined) task.workersCount = workersCount;
     if (assignedTo !== undefined) task.assignedTo = assignedTo || undefined;
+    if (dependsOn !== undefined) task.dependsOn = dependsOn as unknown as typeof task.dependsOn;
   }
 
   await task.save();

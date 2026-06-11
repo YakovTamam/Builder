@@ -12,6 +12,7 @@ import TaskComments from "./TaskComments";
 import TaskPhotos from "./TaskPhotos";
 import TaskAssignSelect from "./TaskAssignSelect";
 import TaskCollaborators from "./TaskCollaborators";
+import TaskChecklist from "./TaskChecklist";
 
 const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
   low: { label: "נמוכה", className: "bg-zinc-700 text-zinc-300" },
@@ -69,6 +70,11 @@ export default async function TaskDetailPage({
     .limit(5)
     .lean();
 
+  const dependencies = task.dependsOn && task.dependsOn.length > 0
+    ? await Task.find({ _id: { $in: task.dependsOn } }).select("title status").lean()
+    : [];
+  const isBlocked = dependencies.some((dep) => dep.status !== "done");
+
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <div className="flex flex-col gap-1">
@@ -105,6 +111,33 @@ export default async function TaskDetailPage({
           <p className="text-sm whitespace-pre-wrap">{task.description}</p>
         </div>
       )}
+
+      {dependencies.length > 0 && (
+        <div className={`rounded-xl border p-4 ${isBlocked ? "border-amber-700/50 bg-amber-900/10" : "border-zinc-800 bg-zinc-900"}`}>
+          <h2 className="text-sm font-medium text-zinc-400 mb-2">
+            {isBlocked ? "⚠️ ממתינה למשימות קודמות" : "משימות קודמות"}
+          </h2>
+          <ul className="flex flex-col gap-1.5">
+            {dependencies.map((dep) => (
+              <li key={String(dep._id)}>
+                <Link
+                  href={`/tasks/${dep._id}`}
+                  className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm hover:border-zinc-700"
+                >
+                  <span>{dep.title}</span>
+                  <span className="text-xs text-zinc-400">{STATUS_LABELS[dep.status ?? "todo"]}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <TaskChecklist
+        taskId={String(task._id)}
+        checklist={(task.checklist ?? []).map((item) => ({ text: item.text, done: !!item.done }))}
+        canEdit={canComment}
+      />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">

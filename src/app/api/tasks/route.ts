@@ -67,6 +67,7 @@ export async function POST(request: Request) {
     durationHours,
     workersCount,
     sequenceItems,
+    checklist,
   } = body as {
     projectId?: string;
     title?: string;
@@ -78,6 +79,7 @@ export async function POST(request: Request) {
     durationHours?: number;
     workersCount?: number;
     sequenceItems?: { title: string; durationHours?: number; workersCount?: number }[];
+    checklist?: { text: string; done?: boolean }[];
   };
 
   if (!projectId || !title) {
@@ -108,6 +110,7 @@ export async function POST(request: Request) {
     type: taskType,
     durationHours,
     workersCount,
+    checklist: (checklist ?? []).map((item) => ({ text: item.text, done: !!item.done })),
   });
 
   // For "sequence" tasks, generate the chain of follow-up tasks.

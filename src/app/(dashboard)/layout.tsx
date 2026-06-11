@@ -20,9 +20,16 @@ const BASE_NAV_ITEMS = [
   { href: "/photos", label: "תמונות", icon: "📷" },
   { href: "/materials", label: "חומרים", icon: "📦" },
   { href: "/alerts", label: "התראות", icon: "🔔" },
+  { href: "/search", label: "חיפוש", icon: "🔍" },
+];
+
+const MANAGER_NAV_ITEMS = [
+  { href: "/reports", label: "דוחות", icon: "📊" },
+  { href: "/templates", label: "תבניות", icon: "📋" },
 ];
 
 const ADMIN_NAV_ITEM = { href: "/users", label: "משתמשים", icon: "👥" };
+const COMPANY_NAV_ITEM = { href: "/company", label: "החברה", icon: "🏢" };
 const SUPER_ADMIN_NAV_ITEM = { href: "/settings", label: "הגדרות", icon: "⚙️" };
 
 const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
@@ -37,11 +44,17 @@ export default async function DashboardLayout({
   }
 
   const isAdmin = session.role === "super_admin" || session.role === "company_admin";
-  const navItems = isAdmin ? [...BASE_NAV_ITEMS, ADMIN_NAV_ITEM] : [...BASE_NAV_ITEMS];
+  const canManage = MANAGE_ROLES.includes(session.role);
+  const navItems = [...BASE_NAV_ITEMS];
+  if (canManage) {
+    navItems.push(...MANAGER_NAV_ITEMS);
+  }
+  if (isAdmin) {
+    navItems.push(ADMIN_NAV_ITEM, COMPANY_NAV_ITEM);
+  }
   if (session.role === "super_admin") {
     navItems.push(SUPER_ADMIN_NAV_ITEM);
   }
-  const canManage = MANAGE_ROLES.includes(session.role);
 
   return (
     <div className="flex flex-1 min-h-screen flex-col md:flex-row">

@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
 import Project from "@/models/Project";
+import TaskTemplate from "@/models/TaskTemplate";
 import TaskForm from "../TaskForm";
 
 const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
@@ -34,6 +35,8 @@ export default async function NewTaskPage({
     notFound();
   }
 
+  const templates = await TaskTemplate.find({ companyId: session.companyId }).select("name").sort({ name: 1 }).lean();
+
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
       <div>
@@ -41,7 +44,10 @@ export default async function NewTaskPage({
         <p className="text-sm text-zinc-400 mt-1">פרויקט: {project.name}</p>
       </div>
       <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-        <TaskForm projectId={projectId} />
+        <TaskForm
+          projectId={projectId}
+          templates={templates.map((t) => ({ _id: String(t._id), name: t.name }))}
+        />
       </div>
     </div>
   );

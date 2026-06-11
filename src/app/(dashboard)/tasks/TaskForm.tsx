@@ -11,7 +11,13 @@ const PRIORITY_OPTIONS = [
 
 type SequenceItem = { title: string; durationHours: string; workersCount: string };
 
-export default function TaskForm({ projectId }: { projectId: string }) {
+export default function TaskForm({
+  projectId,
+  templates = [],
+}: {
+  projectId: string;
+  templates?: { _id: string; name: string }[];
+}) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -24,8 +30,47 @@ export default function TaskForm({ projectId }: { projectId: string }) {
   const [sequenceItems, setSequenceItems] = useState<SequenceItem[]>([
     { title: "", durationHours: "", workersCount: "" },
   ]);
+  const [checklistItems, setChecklistItems] = useState<string[]>([]);
+  const [newChecklistItem, setNewChecklistItem] = useState("");
+  const [templateId, setTemplateId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  function addChecklistItem() {
+    if (!newChecklistItem.trim()) return;
+    setChecklistItems((prev) => [...prev, newChecklistItem.trim()]);
+    setNewChecklistItem("");
+  }
+
+  function removeChecklistItem(index: number) {
+    setChecklistItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function handleTemplateSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/tasks/from-template", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, templateId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "שגיאה ביצירת משימות מהתבנית");
+        return;
+      }
+
+      router.push(`/tasks?projectId=${projectId}`);
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function updateSequenceItem(index: number, field: keyof SequenceItem, value: string) {
     setSequenceItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
@@ -54,6 +99,7 @@ export default function TaskForm({ projectId }: { projectId: string }) {
       durationHours: durationHours ? Number(durationHours) : undefined,
       workersCount: workersCount ? Number(workersCount) : undefined,
       type,
+      checklist: checklistItems.map((text) => ({ text, done: false })),
     };
 
     if (type === "sequence") {
@@ -88,7 +134,38 @@ export default function TaskForm({ projectId }: { projectId: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
+      {templates.length > 0 && (
+        <form onSubmit={handleTemplateSubmit} className="flex flex-col gap-2 rounded-lg border border-zinc-800 p-3">
+          <label htmlFor="templateId" className="text-sm text-zinc-300">
+            יצירה מתבנית (אופציונלי)
+          </label>
+          <div className="flex items-center gap-2">
+            <select
+              id="templateId"
+              value={templateId}
+              onChange={(e) => setTemplateId(e.target.value)}
+              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="">בחר תבנית...</option>
+              {templates.map((tpl) => (
+                <option key={tpl._id} value={tpl._id}>
+                  {tpl.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              disabled={!templateId || loading}
+              className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50"
+            >
+              צור מהתבנית
+            </button>
+          </div>
+        </form>
+      )}
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <label htmlFor="title" className="text-sm text-zinc-300">
           כותרת המשימה
@@ -270,6 +347,42 @@ export default function TaskForm({ projectId }: { projectId: string }) {
         </div>
       )}
 
+      {type === "single" && (
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-zinc-300">רשימת בדיקה (אופציונלי)</label>
+          <div className="flex flex-col gap-1">
+            {checklistItems.map((item, index) => (
+              <div key={index} className="flex items-center gap-2 text-sm">
+                <span className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2">{item}</span>
+                <button
+                  type="button"
+                  onClick={() => removeChecklistItem(index)}
+                  className="text-red-400 hover:text-red-300 text-sm px-2"
+                >
+                  הסר
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={newChecklistItem}
+              onChange={(e) => setNewChecklistItem(e.target.value)}
+              placeholder="פריט חדש"
+              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <button
+              type="button"
+              onClick={addChecklistItem}
+              className="text-xs text-emerald-400 hover:text-emerald-300 px-2"
+            >
+              + הוסף
+            </button>
+          </div>
+        </div>
+      )}
+
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       <button
@@ -279,6 +392,7 @@ export default function TaskForm({ projectId }: { projectId: string }) {
       >
         {loading ? "יוצר..." : "צור משימה"}
       </button>
-    </form>
+      </form>
+    </div>
   );
 }

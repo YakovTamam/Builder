@@ -36,6 +36,14 @@ export default async function EditTaskPage({
     notFound();
   }
 
+  const siblingTasks = await Task.find({
+    projectId: task.projectId,
+    _id: { $ne: task._id },
+  })
+    .select("title")
+    .sort({ title: 1 })
+    .lean();
+
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
       <div>
@@ -53,7 +61,10 @@ export default async function EditTaskPage({
             stage: task.stage,
             durationHours: task.durationHours,
             workersCount: task.workersCount,
+            dependsOn: (task.dependsOn ?? []).map((id) => String(id)),
+            checklist: (task.checklist ?? []).map((item) => ({ text: item.text, done: !!item.done })),
           }}
+          siblingTasks={siblingTasks.map((t) => ({ _id: String(t._id), title: t.title }))}
         />
       </div>
     </div>

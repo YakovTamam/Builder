@@ -29,6 +29,14 @@ const taskSchema = new Schema(
     // Links generated child tasks back to the sequence task that created them.
     parentTaskId: { type: Schema.Types.ObjectId, ref: "Task" },
     sequenceOrder: { type: Number },
+    // Tasks that must be completed (status "done") before this one can start.
+    dependsOn: [{ type: Schema.Types.ObjectId, ref: "Task" }],
+    checklist: [
+      {
+        text: { type: String, required: true },
+        done: { type: Boolean, default: false },
+      },
+    ],
   },
   { timestamps: true },
 );
