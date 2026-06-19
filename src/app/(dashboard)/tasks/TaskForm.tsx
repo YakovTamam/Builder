@@ -145,7 +145,7 @@ export default function TaskForm({
               id="templateId"
               value={templateId}
               onChange={(e) => setTemplateId(e.target.value)}
-              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">בחר תבנית...</option>
               {templates.map((tpl) => (
@@ -176,7 +176,7 @@ export default function TaskForm({
           required
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
@@ -189,7 +189,7 @@ export default function TaskForm({
           rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
@@ -228,7 +228,7 @@ export default function TaskForm({
             id="priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {PRIORITY_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -248,7 +248,7 @@ export default function TaskForm({
             min={0}
             value={durationHours}
             onChange={(e) => setDurationHours(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
@@ -262,7 +262,7 @@ export default function TaskForm({
             min={0}
             value={workersCount}
             onChange={(e) => setWorkersCount(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
       </div>
@@ -277,7 +277,7 @@ export default function TaskForm({
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
@@ -290,7 +290,7 @@ export default function TaskForm({
             type="text"
             value={stage}
             onChange={(e) => setStage(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
       </div>
@@ -315,7 +315,7 @@ export default function TaskForm({
                 placeholder={`כותרת משימה ${index + 1}`}
                 value={item.title}
                 onChange={(e) => updateSequenceItem(index, "title", e.target.value)}
-                className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <input
                 type="number"
@@ -323,7 +323,7 @@ export default function TaskForm({
                 placeholder="שעות"
                 value={item.durationHours}
                 onChange={(e) => updateSequenceItem(index, "durationHours", e.target.value)}
-                className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <input
                 type="number"
@@ -331,7 +331,7 @@ export default function TaskForm({
                 placeholder="פועלים"
                 value={item.workersCount}
                 onChange={(e) => updateSequenceItem(index, "workersCount", e.target.value)}
-                className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               {sequenceItems.length > 1 && (
                 <button
@@ -370,7 +370,7 @@ export default function TaskForm({
               value={newChecklistItem}
               onChange={(e) => setNewChecklistItem(e.target.value)}
               placeholder="פריט חדש"
-              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <button
               type="button"

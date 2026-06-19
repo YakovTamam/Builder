@@ -125,7 +125,7 @@ export default function MaterialsBoard({
         <select
           value={projectId}
           onChange={(e) => handleProjectChange(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:max-w-xs"
+          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:max-w-xs"
         >
           {projects.map((project) => (
             <option key={project._id} value={project._id}>
@@ -152,7 +152,7 @@ export default function MaterialsBoard({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -163,7 +163,7 @@ export default function MaterialsBoard({
               min={0}
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -172,7 +172,7 @@ export default function MaterialsBoard({
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
               placeholder="טון, יח׳..."
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -180,7 +180,7 @@ export default function MaterialsBoard({
             <input
               value={supplier}
               onChange={(e) => setSupplier(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -189,7 +189,7 @@ export default function MaterialsBoard({
               type="date"
               value={expectedDate}
               onChange={(e) => setExpectedDate(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 

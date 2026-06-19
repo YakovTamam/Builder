@@ -109,7 +109,7 @@ export default function TemplatesManager({ templates }: { templates: Template[] 
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-sm"
+            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-sm"
           />
         </div>
 
@@ -123,12 +123,12 @@ export default function TemplatesManager({ templates }: { templates: Template[] 
                   required
                   value={item.title}
                   onChange={(e) => updateItem(index, "title", e.target.value)}
-                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 <select
                   value={item.priority}
                   onChange={(e) => updateItem(index, "priority", e.target.value)}
-                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
                   {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
                     <option key={value} value={value}>
@@ -142,7 +142,7 @@ export default function TemplatesManager({ templates }: { templates: Template[] 
                   placeholder="שעות"
                   value={item.durationHours ?? ""}
                   onChange={(e) => updateItem(index, "durationHours", e.target.value)}
-                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 <input
                   type="number"
@@ -150,7 +150,7 @@ export default function TemplatesManager({ templates }: { templates: Template[] 
                   placeholder="פועלים"
                   value={item.workersCount ?? ""}
                   onChange={(e) => updateItem(index, "workersCount", e.target.value)}
-                  className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
               <textarea

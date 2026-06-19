@@ -81,7 +81,7 @@ export default function TaskComments({
             onChange={(e) => setText(e.target.value)}
             rows={2}
             placeholder="הוסף תגובה..."
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
           />
           {error && <p className="text-sm text-red-400">{error}</p>}
           <button

@@ -97,7 +97,7 @@ export default function PhotoGallery({
         <select
           value={projectId}
           onChange={(e) => handleProjectChange(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:max-w-xs"
+          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:max-w-xs"
         >
           {projects.map((project) => (
             <option key={project._id} value={project._id}>
@@ -124,7 +124,7 @@ export default function PhotoGallery({
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://..."
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -132,7 +132,7 @@ export default function PhotoGallery({
             <input
               value={stage}
               onChange={(e) => setStage(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -140,7 +140,7 @@ export default function PhotoGallery({
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 

@@ -69,7 +69,7 @@ export default function SettingsForm({ initial }: { initial: SettingsValues }) {
           value={logoUrl}
           onChange={(e) => setLogoUrl(e.target.value)}
           placeholder="/icon.svg"
-          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
@@ -113,7 +113,7 @@ export default function SettingsForm({ initial }: { initial: SettingsValues }) {
               max={1024}
               value={heroLogoWidth}
               onChange={(e) => setHeroLogoWidth(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -127,7 +127,7 @@ export default function SettingsForm({ initial }: { initial: SettingsValues }) {
               max={1024}
               value={heroLogoHeight}
               onChange={(e) => setHeroLogoHeight(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function SettingsForm({ initial }: { initial: SettingsValues }) {
               max={1024}
               value={footerLogoWidth}
               onChange={(e) => setFooterLogoWidth(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -161,7 +161,7 @@ export default function SettingsForm({ initial }: { initial: SettingsValues }) {
               max={1024}
               value={footerLogoHeight}
               onChange={(e) => setFooterLogoHeight(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
         </div>

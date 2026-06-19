@@ -110,12 +110,12 @@ export default function TaskCollaborators({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="אימייל המשתתף"
-          className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
         <select
           value={permission}
           onChange={(e) => setPermission(e.target.value as (typeof PERMISSION_OPTIONS)[number])}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           {PERMISSION_OPTIONS.map((option) => (
             <option key={option} value={option}>
