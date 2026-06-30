@@ -46,7 +46,7 @@ export default function CompanyForm({ name, plan }: { name: string; plan: string
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <label htmlFor="companyName" className="text-sm text-zinc-300">
+        <label htmlFor="companyName" className="text-sm text-gray-700">
           שם החברה
         </label>
         <input
@@ -55,22 +55,22 @@ export default function CompanyForm({ name, plan }: { name: string; plan: string
           required
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-sm"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-sm"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <p className="text-sm text-zinc-300">חבילה</p>
-        <p className="text-sm text-zinc-400">{PLAN_LABELS[plan] ?? plan}</p>
+        <p className="text-sm text-gray-700">חבילה</p>
+        <p className="text-sm text-gray-500">{PLAN_LABELS[plan] ?? plan}</p>
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
-      {success && <p className="text-sm text-emerald-400">{success}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      {success && <p className="text-sm text-emerald-600">{success}</p>}
 
       <button
         type="submit"
         disabled={loading}
-        className="self-start rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50"
+        className="self-start rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50"
       >
         {loading ? "שומר..." : "שמור שינויים"}
       </button>

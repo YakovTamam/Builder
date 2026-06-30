@@ -6,10 +6,10 @@ import Project from "@/models/Project";
 import DeleteProjectButton from "./DeleteProjectButton";
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  planning: { label: "בתכנון", className: "bg-zinc-700 text-zinc-200" },
-  active: { label: "פעיל", className: "bg-emerald-700/30 text-emerald-400" },
-  on_hold: { label: "מוקפא", className: "bg-amber-700/30 text-amber-400" },
-  completed: { label: "הושלם", className: "bg-blue-700/30 text-blue-400" },
+  planning: { label: "בתכנון", className: "bg-gray-100 text-gray-800" },
+  active: { label: "פעיל", className: "bg-emerald-100 text-emerald-700" },
+  on_hold: { label: "מוקפא", className: "bg-amber-100 text-amber-700" },
+  completed: { label: "הושלם", className: "bg-blue-100 text-blue-700" },
 };
 
 const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
@@ -47,19 +47,19 @@ export default async function ProjectDetailPage({
       <div className="flex items-start justify-between gap-2">
         <div>
           <h1 className="text-2xl font-semibold">{project.name}</h1>
-          {project.address && <p className="text-zinc-400 text-sm mt-1">{project.address}</p>}
+          {project.address && <p className="text-gray-500 text-sm mt-1">{project.address}</p>}
         </div>
         <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${status.label ? status.className : ""}`}>
           {status.label}
         </span>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 flex flex-col gap-3">
-        <div className="flex items-center justify-between text-sm text-zinc-400">
+      <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-3">
+        <div className="flex items-center justify-between text-sm text-gray-500">
           <span>התקדמות</span>
           <span>{project.progress ?? 0}%</span>
         </div>
-        <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+        <div className="h-2 rounded-full bg-white overflow-hidden">
           <div
             className="h-full rounded-full bg-emerald-500"
             style={{ width: `${project.progress ?? 0}%` }}
@@ -68,29 +68,29 @@ export default async function ProjectDetailPage({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs text-zinc-400 mb-1">תקציב</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500 mb-1">תקציב</p>
           <p className="font-medium">{project.budget ? `₪${project.budget.toLocaleString("he-IL")}` : "—"}</p>
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs text-zinc-400 mb-1">תאריך התחלה</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500 mb-1">תאריך התחלה</p>
           <p className="font-medium">
             {project.startDate ? new Date(project.startDate).toLocaleDateString("he-IL") : "—"}
           </p>
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs text-zinc-400 mb-1">תאריך מסירה</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500 mb-1">תאריך מסירה</p>
           <p className="font-medium">
             {project.dueDate ? new Date(project.dueDate).toLocaleDateString("he-IL") : "—"}
           </p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
         <h2 className="text-lg font-medium mb-2">משימות</h2>
         <Link
           href={`/tasks?projectId=${project._id}`}
-          className="inline-block rounded-lg border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors"
+          className="inline-block rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
         >
           ניהול משימות לפרויקט זה
         </Link>
@@ -100,7 +100,7 @@ export default async function ProjectDetailPage({
         <div className="flex items-center gap-3">
           <Link
             href={`/projects/${project._id}/edit`}
-            className="rounded-lg border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors"
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
           >
             עריכת פרויקט
           </Link>

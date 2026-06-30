@@ -16,8 +16,8 @@ export default function LogoutButton({ compact = false }: { compact?: boolean })
       onClick={handleLogout}
       className={
         compact
-          ? "text-xs text-zinc-400 hover:text-white"
-          : "rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-center"
+          ? "text-xs text-gray-500 hover:text-gray-900"
+          : "rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-center"
       }
     >
       התנתק

@@ -47,11 +47,11 @@ export default function TaskComments({
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 flex flex-col gap-3">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-3">
       <h2 className="text-lg font-medium">תגובות</h2>
 
       {comments.length === 0 ? (
-        <p className="text-sm text-zinc-400">אין תגובות עדיין.</p>
+        <p className="text-sm text-gray-500">אין תגובות עדיין.</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {comments
@@ -60,10 +60,10 @@ export default function TaskComments({
             .map((comment, idx) => {
               const name = typeof comment.userId === "object" ? comment.userId?.name : undefined;
               return (
-                <li key={idx} className="rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-sm">
+                <li key={idx} className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-zinc-300">{name ?? "משתמש"}</span>
-                    <span className="text-xs text-zinc-500">
+                    <span className="font-medium text-gray-700">{name ?? "משתמש"}</span>
+                    <span className="text-xs text-gray-400">
                       {new Date(comment.createdAt).toLocaleString("he-IL")}
                     </span>
                   </div>
@@ -81,13 +81,13 @@ export default function TaskComments({
             onChange={(e) => setText(e.target.value)}
             rows={2}
             placeholder="הוסף תגובה..."
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
           />
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             type="submit"
             disabled={loading || !text.trim()}
-            className="self-start rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50"
+            className="self-start rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50"
           >
             {loading ? "שולח..." : "שלח תגובה"}
           </button>

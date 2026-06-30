@@ -11,7 +11,6 @@ const taskTemplateSchema = new Schema(
         description: { type: String },
         priority: { type: String, enum: TASK_PRIORITIES, default: "medium" },
         durationHours: { type: Number, min: 0 },
-        workersCount: { type: Number, min: 0 },
         checklist: [{ type: String }],
       },
     ],

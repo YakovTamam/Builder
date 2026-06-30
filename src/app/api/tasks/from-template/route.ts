@@ -36,7 +36,6 @@ export async function POST(request: Request) {
       description?: string;
       priority?: string;
       durationHours?: number;
-      workersCount?: number;
       checklist?: string[];
     }) => ({
       projectId,
@@ -45,7 +44,6 @@ export async function POST(request: Request) {
       priority: item.priority ?? "medium",
       type: "single" as const,
       durationHours: item.durationHours,
-      workersCount: item.workersCount,
       checklist: (item.checklist ?? []).map((text) => ({ text, done: false })),
     })),
   );

@@ -48,9 +48,9 @@ export default async function EditTaskPage({
     <div className="flex flex-col gap-4 max-w-2xl">
       <div>
         <h1 className="text-2xl font-semibold">עריכת משימה</h1>
-        <p className="text-sm text-zinc-400 mt-1">פרויקט: {project.name}</p>
+        <p className="text-sm text-gray-500 mt-1">פרויקט: {project.name}</p>
       </div>
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
         <TaskEditForm
           task={{
             _id: String(task._id),
@@ -60,7 +60,6 @@ export default async function EditTaskPage({
             dueDate: task.dueDate,
             stage: task.stage,
             durationHours: task.durationHours,
-            workersCount: task.workersCount,
             dependsOn: (task.dependsOn ?? []).map((depId: unknown) => String(depId)),
             checklist: (task.checklist ?? []).map((item: { text: string; done?: boolean }) => ({
               text: item.text,

@@ -15,9 +15,9 @@ import TaskCollaborators from "./TaskCollaborators";
 import TaskChecklist from "./TaskChecklist";
 
 const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
-  low: { label: "נמוכה", className: "bg-zinc-700 text-zinc-300" },
-  medium: { label: "בינונית", className: "bg-amber-700/30 text-amber-400" },
-  high: { label: "גבוהה", className: "bg-red-700/30 text-red-400" },
+  low: { label: "נמוכה", className: "bg-gray-100 text-gray-700" },
+  medium: { label: "בינונית", className: "bg-amber-100 text-amber-700" },
+  high: { label: "גבוהה", className: "bg-red-100 text-red-700" },
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -76,9 +76,9 @@ export default async function TaskDetailPage({
   const isBlocked = dependencies.some((dep) => dep.status !== "done");
 
   return (
-    <div className="flex flex-col gap-6 max-w-2xl">
+    <div className="font-project-tasks flex flex-col gap-6 max-w-2xl">
       <div className="flex flex-col gap-1">
-        <Link href={`/tasks?projectId=${project._id}`} className="text-sm text-zinc-400 hover:text-white">
+        <Link href={`/tasks?projectId=${project._id}`} className="text-sm text-gray-500 hover:text-emerald-700">
           ← חזרה למשימות {project.name}
         </Link>
         <div className="flex items-start justify-between gap-2">
@@ -91,14 +91,14 @@ export default async function TaskDetailPage({
           עדיפות {priority.label}
         </span>
         {task.type === "sequence" && (
-          <span className="rounded-full px-2.5 py-1 text-xs font-medium bg-blue-700/30 text-blue-400">
+          <span className="rounded-full px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700">
             משימה יוצרת רצף
           </span>
         )}
         {parent && (
           <Link
             href={`/tasks/${parent._id}`}
-            className="rounded-full px-2.5 py-1 text-xs font-medium bg-zinc-700 text-zinc-300 hover:bg-zinc-600"
+            className="rounded-full px-2.5 py-1 text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
           >
             חלק מרצף: {parent.title}
           </Link>
@@ -106,15 +106,15 @@ export default async function TaskDetailPage({
       </div>
 
       {task.description && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <h2 className="text-sm font-medium text-zinc-400 mb-2">תיאור</h2>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <h2 className="text-sm font-medium text-gray-500 mb-2">תיאור</h2>
           <p className="text-sm whitespace-pre-wrap">{task.description}</p>
         </div>
       )}
 
       {dependencies.length > 0 && (
-        <div className={`rounded-xl border p-4 ${isBlocked ? "border-amber-700/50 bg-amber-900/10" : "border-zinc-800 bg-zinc-900"}`}>
-          <h2 className="text-sm font-medium text-zinc-400 mb-2">
+        <div className={`rounded-xl border p-4 ${isBlocked ? "border-amber-300 bg-amber-50" : "border-gray-200 bg-white"}`}>
+          <h2 className="text-sm font-medium text-gray-500 mb-2">
             {isBlocked ? "⚠️ ממתינה למשימות קודמות" : "משימות קודמות"}
           </h2>
           <ul className="flex flex-col gap-1.5">
@@ -122,10 +122,10 @@ export default async function TaskDetailPage({
               <li key={String(dep._id)}>
                 <Link
                   href={`/tasks/${dep._id}`}
-                  className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm hover:border-zinc-700"
+                  className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm hover:border-gray-400"
                 >
                   <span>{dep.title}</span>
-                  <span className="text-xs text-zinc-400">{STATUS_LABELS[dep.status ?? "todo"]}</span>
+                  <span className="text-xs text-gray-500">{STATUS_LABELS[dep.status ?? "todo"]}</span>
                 </Link>
               </li>
             ))}
@@ -142,31 +142,27 @@ export default async function TaskDetailPage({
         canEdit={canComment}
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs text-zinc-400 mb-1">סטטוס</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500 mb-1">סטטוס</p>
           {canComment ? (
             <TaskStatusSelect taskId={String(task._id)} status={task.status ?? "todo"} />
           ) : (
             <p className="font-medium">{STATUS_LABELS[task.status ?? "todo"]}</p>
           )}
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs text-zinc-400 mb-1">משך</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500 mb-1">משך</p>
           <p className="font-medium">{typeof task.durationHours === "number" ? `${task.durationHours} שעות` : "—"}</p>
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs text-zinc-400 mb-1">כמות פועלים</p>
-          <p className="font-medium">{typeof task.workersCount === "number" ? task.workersCount : "—"}</p>
-        </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs text-zinc-400 mb-1">תאריך יעד</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500 mb-1">תאריך יעד</p>
           <p className="font-medium">{task.dueDate ? new Date(task.dueDate).toLocaleDateString("he-IL") : "—"}</p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-        <p className="text-xs text-zinc-400 mb-1">עובד שטח אחראי</p>
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <p className="text-xs text-gray-500 mb-1">עובד שטח אחראי</p>
         {canManage ? (
           <TaskAssignSelect
             taskId={String(task._id)}
@@ -180,27 +176,27 @@ export default async function TaskDetailPage({
       </div>
 
       {task.stage && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs text-zinc-400 mb-1">שלב</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500 mb-1">שלב</p>
           <p className="font-medium">{task.stage}</p>
         </div>
       )}
 
       {task.type === "sequence" && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
           <h2 className="text-lg font-medium mb-3">רצף משימות ההמשך</h2>
           {children.length === 0 ? (
-            <p className="text-zinc-400 text-sm">לא הוגדרו משימות המשך.</p>
+            <p className="text-gray-500 text-sm">לא הוגדרו משימות המשך.</p>
           ) : (
             <ol className="flex flex-col gap-2">
               {children.map((child) => (
                 <li key={String(child._id)}>
                   <Link
                     href={`/tasks/${child._id}`}
-                    className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm hover:border-zinc-700"
+                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm hover:border-gray-400"
                   >
                     <span>{child.title}</span>
-                    <span className="text-xs text-zinc-400">
+                    <span className="text-xs text-gray-500">
                       {STATUS_LABELS[child.status ?? "todo"]}
                       {child.dueDate ? ` · ${new Date(child.dueDate).toLocaleDateString("he-IL")}` : ""}
                     </span>
@@ -236,17 +232,17 @@ export default async function TaskDetailPage({
       )}
 
       {activity.length > 0 && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
           <h2 className="text-lg font-medium mb-3">היסטוריית פעילות</h2>
           <ul className="flex flex-col gap-2">
             {activity.map((entry) => (
-              <li key={String(entry._id)} className="text-sm text-zinc-400 flex items-center justify-between">
+              <li key={String(entry._id)} className="text-sm text-gray-500 flex items-center justify-between">
                 <span>
                   {(entry.userId as unknown as { name?: string })?.name ?? "משתמש"} שינה סטטוס מ
                   {STATUS_LABELS[(entry.metadata as { from?: string })?.from ?? ""] ?? "—"} ל
                   {STATUS_LABELS[(entry.metadata as { to?: string })?.to ?? ""] ?? "—"}
                 </span>
-                <span className="text-xs text-zinc-500">{new Date(String(entry.createdAt)).toLocaleString("he-IL")}</span>
+                <span className="text-xs text-gray-400">{new Date(String(entry.createdAt)).toLocaleString("he-IL")}</span>
               </li>
             ))}
           </ul>
@@ -257,7 +253,7 @@ export default async function TaskDetailPage({
         <div className="flex items-center gap-3">
           <Link
             href={`/tasks/${task._id}/edit`}
-            className="rounded-lg border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors"
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
           >
             עריכת משימה
           </Link>

@@ -26,7 +26,7 @@ export default function DeleteTaskButton({ taskId, projectId }: { taskId: string
     <button
       onClick={handleDelete}
       disabled={loading}
-      className="rounded-lg border border-red-800 text-red-400 px-4 py-2 text-sm hover:bg-red-950 transition-colors disabled:opacity-50"
+      className="rounded-lg border border-red-300 text-red-600 px-4 py-2 text-sm hover:bg-red-50 transition-colors disabled:opacity-50"
     >
       {loading ? "מוחק..." : "מחיקת משימה"}
     </button>

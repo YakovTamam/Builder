@@ -43,21 +43,21 @@ export default async function AlertsPage() {
 
       {overdueTasks.length > 0 && (
         <div className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium text-zinc-400">משימות באיחור</h2>
+          <h2 className="text-sm font-medium text-gray-500">משימות באיחור</h2>
           {overdueTasks.map((task) => (
             <Link
               key={String(task._id)}
               href={`/tasks/${task._id}`}
-              className="rounded-xl border border-red-900/40 bg-red-950/20 p-4 flex items-center justify-between gap-3 hover:border-red-800 transition-colors"
+              className="rounded-xl border border-red-200 bg-red-50 p-4 flex items-center justify-between gap-3 hover:border-red-300 transition-colors"
             >
               <div className="flex flex-col gap-1">
-                <span className="rounded-full px-2.5 py-1 text-xs font-medium bg-red-700/30 text-red-400 self-start">
+                <span className="rounded-full px-2.5 py-1 text-xs font-medium bg-red-100 text-red-700 self-start">
                   גבוהה
                 </span>
                 <p className="font-medium">{task.title}</p>
-                <p className="text-xs text-zinc-400">{projectNames.get(String(task.projectId)) ?? ""}</p>
+                <p className="text-xs text-gray-500">{projectNames.get(String(task.projectId)) ?? ""}</p>
               </div>
-              <span className="text-xs text-zinc-400 shrink-0">
+              <span className="text-xs text-gray-500 shrink-0">
                 יעד: {new Date(task.dueDate!).toLocaleDateString("he-IL")}
               </span>
             </Link>

@@ -40,8 +40,8 @@ export default function TaskChecklist({
   const doneCount = items.filter((item) => item.done).length;
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-      <h2 className="text-sm font-medium text-zinc-400 mb-2">
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <h2 className="text-sm font-medium text-gray-500 mb-2">
         רשימת בדיקה ({doneCount}/{items.length})
       </h2>
       <ul className="flex flex-col gap-1.5">
@@ -55,7 +55,7 @@ export default function TaskChecklist({
                 onChange={() => toggle(index)}
                 className="accent-emerald-600"
               />
-              <span className={item.done ? "line-through text-zinc-500" : ""}>{item.text}</span>
+              <span className={item.done ? "line-through text-gray-400" : ""}>{item.text}</span>
             </label>
           </li>
         ))}

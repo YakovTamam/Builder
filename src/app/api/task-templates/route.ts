@@ -34,7 +34,6 @@ export async function POST(request: Request) {
       description?: string;
       priority?: string;
       durationHours?: number;
-      workersCount?: number;
       checklist?: string[];
     }[];
   };
@@ -60,7 +59,6 @@ export async function POST(request: Request) {
       description: item.description,
       priority: item.priority ?? "medium",
       durationHours: item.durationHours,
-      workersCount: item.workersCount,
       checklist: (item.checklist ?? []).filter((c) => c.trim()),
     })),
   });

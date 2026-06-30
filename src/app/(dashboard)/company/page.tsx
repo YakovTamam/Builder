@@ -33,17 +33,17 @@ export default async function CompanyPage() {
       <h1 className="text-2xl font-semibold">החברה שלי</h1>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs text-zinc-400 mb-1">משתמשים</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500 mb-1">משתמשים</p>
           <p className="text-2xl font-semibold">{usersCount}</p>
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-          <p className="text-xs text-zinc-400 mb-1">פרויקטים</p>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500 mb-1">פרויקטים</p>
           <p className="text-2xl font-semibold">{projectsCount}</p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
         <h2 className="text-lg font-medium mb-4">פרטי חברה</h2>
         <CompanyForm name={company.name} plan={company.plan ?? "trial"} />
       </div>

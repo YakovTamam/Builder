@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Builder",
   },
   icons: {
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#09090b",
+  themeColor: "#f8fafc",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -30,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100">
+      <body className="min-h-full flex flex-col bg-gray-50 text-gray-900">
         {children}
         <ServiceWorkerRegister />
       </body>

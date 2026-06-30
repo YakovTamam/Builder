@@ -13,16 +13,16 @@ export default function DashboardPage() {
         {KPI_CARDS.map((card) => (
           <div
             key={card.label}
-            className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 flex flex-col gap-2"
+            className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-2"
           >
-            <span className="text-sm text-zinc-400">{card.label}</span>
+            <span className="text-sm text-gray-500">{card.label}</span>
             <span className="text-3xl font-bold">{card.value}</span>
           </div>
         ))}
       </div>
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
         <h2 className="text-lg font-medium mb-2">התראות אחרונות</h2>
-        <p className="text-zinc-400 text-sm">אין התראות להצגה כרגע.</p>
+        <p className="text-gray-500 text-sm">אין התראות להצגה כרגע.</p>
       </div>
     </div>
   );

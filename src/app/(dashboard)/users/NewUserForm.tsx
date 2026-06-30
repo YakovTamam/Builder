@@ -52,7 +52,7 @@ export default function NewUserForm() {
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
       <div className="flex flex-col gap-1">
-        <label htmlFor="name" className="text-sm text-zinc-300">
+        <label htmlFor="name" className="text-sm text-gray-700">
           שם מלא
         </label>
         <input
@@ -61,12 +61,12 @@ export default function NewUserForm() {
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="email" className="text-sm text-zinc-300">
+        <label htmlFor="email" className="text-sm text-gray-700">
           אימייל
         </label>
         <input
@@ -75,12 +75,12 @@ export default function NewUserForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="password" className="text-sm text-zinc-300">
+        <label htmlFor="password" className="text-sm text-gray-700">
           סיסמה זמנית
         </label>
         <input
@@ -90,19 +90,19 @@ export default function NewUserForm() {
           minLength={8}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="role" className="text-sm text-zinc-300">
+        <label htmlFor="role" className="text-sm text-gray-700">
           תפקיד
         </label>
         <select
           id="role"
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           {ROLE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -112,13 +112,13 @@ export default function NewUserForm() {
         </select>
       </div>
 
-      {error && <p className="text-sm text-red-400 sm:col-span-2 lg:col-span-4">{error}</p>}
-      {success && <p className="text-sm text-emerald-400 sm:col-span-2 lg:col-span-4">{success}</p>}
+      {error && <p className="text-sm text-red-600 sm:col-span-2 lg:col-span-4">{error}</p>}
+      {success && <p className="text-sm text-emerald-600 sm:col-span-2 lg:col-span-4">{success}</p>}
 
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50 sm:col-span-2 lg:col-span-4"
+        className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50 sm:col-span-2 lg:col-span-4"
       >
         {loading ? "יוצר..." : "הוסף משתמש"}
       </button>

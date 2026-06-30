@@ -59,13 +59,13 @@ export default async function DashboardLayout({
   return (
     <div className="flex flex-1 min-h-screen flex-col md:flex-row">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-64 shrink-0 border-s border-zinc-800 bg-zinc-900 p-4 flex-col gap-1">
+      <aside className="hidden md:flex w-64 shrink-0 border-s border-gray-200 bg-white p-4 flex-col gap-1">
         <div className="text-xl font-bold mb-6 px-2">Builder</div>
         <SidebarNav items={navItems} />
-        <div className="border-t border-zinc-800 pt-3 flex flex-col gap-2">
+        <div className="border-t border-gray-200 pt-3 flex flex-col gap-2">
           <div className="px-2">
             <p className="text-sm font-medium">{session.name}</p>
-            <p className="text-xs text-zinc-400">{ROLE_LABELS[session.role] ?? session.role}</p>
+            <p className="text-xs text-gray-500">{ROLE_LABELS[session.role] ?? session.role}</p>
           </div>
           <LogoutButton />
         </div>
@@ -73,12 +73,12 @@ export default async function DashboardLayout({
 
       {/* Mobile top bar */}
       <header
-        className="md:hidden flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-zinc-900 sticky top-0 z-10"
+        className="md:hidden flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-10"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
       >
         <span className="text-lg font-bold">Builder</span>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-zinc-400">{session.name}</span>
+          <span className="text-xs text-gray-500">{session.name}</span>
           <LogoutButton compact />
         </div>
       </header>

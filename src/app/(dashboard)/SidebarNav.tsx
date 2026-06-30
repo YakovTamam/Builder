@@ -18,8 +18,8 @@ export default function SidebarNav({ items }: { items: NavItem[] }) {
             href={item.href}
             className={`rounded-lg px-3 py-2 text-sm transition-colors flex items-center gap-2 ${
               active
-                ? "bg-emerald-700/20 text-emerald-300 font-medium"
-                : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                ? "bg-emerald-100 text-emerald-700 font-medium"
+                : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             <span>{item.icon}</span>

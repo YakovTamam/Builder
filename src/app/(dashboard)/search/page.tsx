@@ -95,17 +95,17 @@ export default async function SearchPage({
           defaultValue={query}
           placeholder="חפש פרויקטים, משימות, חומרים, אנשים..."
           autoFocus
-          className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
         <button
           type="submit"
-          className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium"
+          className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium"
         >
           חיפוש
         </button>
       </form>
 
-      {query && !hasResults && <p className="text-sm text-zinc-400">לא נמצאו תוצאות עבור &quot;{query}&quot;.</p>}
+      {query && !hasResults && <p className="text-sm text-gray-500">לא נמצאו תוצאות עבור &quot;{query}&quot;.</p>}
 
       {projects.length > 0 && (
         <section className="flex flex-col gap-2">
@@ -115,10 +115,10 @@ export default async function SearchPage({
               <Link
                 key={String(project._id)}
                 href={`/projects/${project._id}`}
-                className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm hover:border-zinc-700"
+                className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm hover:border-gray-400"
               >
                 <span>{project.name}</span>
-                <span className="text-xs text-zinc-400">{STATUS_LABELS[project.status ?? ""] ?? project.status}</span>
+                <span className="text-xs text-gray-500">{STATUS_LABELS[project.status ?? ""] ?? project.status}</span>
               </Link>
             ))}
           </div>
@@ -133,10 +133,10 @@ export default async function SearchPage({
               <Link
                 key={String(task._id)}
                 href={`/tasks/${task._id}`}
-                className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm hover:border-zinc-700"
+                className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm hover:border-gray-400"
               >
                 <span>{task.title}</span>
-                <span className="text-xs text-zinc-400">{STATUS_LABELS[task.status ?? ""] ?? task.status}</span>
+                <span className="text-xs text-gray-500">{STATUS_LABELS[task.status ?? ""] ?? task.status}</span>
               </Link>
             ))}
           </div>
@@ -151,10 +151,10 @@ export default async function SearchPage({
               <Link
                 key={String(material._id)}
                 href={`/materials?projectId=${material.projectId}`}
-                className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm hover:border-zinc-700"
+                className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm hover:border-gray-400"
               >
                 <span>{material.name}</span>
-                <span className="text-xs text-zinc-400">{STATUS_LABELS[material.status ?? ""] ?? material.status}</span>
+                <span className="text-xs text-gray-500">{STATUS_LABELS[material.status ?? ""] ?? material.status}</span>
               </Link>
             ))}
           </div>
@@ -168,13 +168,13 @@ export default async function SearchPage({
             {users.map((user) => (
               <div
                 key={String(user._id)}
-                className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm"
+                className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
               >
                 <div>
                   <p>{user.name}</p>
-                  <p className="text-xs text-zinc-400">{user.email}</p>
+                  <p className="text-xs text-gray-500">{user.email}</p>
                 </div>
-                <span className="text-xs text-zinc-400">{ROLE_LABELS[user.role] ?? user.role}</span>
+                <span className="text-xs text-gray-500">{ROLE_LABELS[user.role] ?? user.role}</span>
               </div>
             ))}
           </div>
