@@ -55,22 +55,8 @@ const STATUS_STYLES: Record<string, { bar: string; dot: string; label: string }>
   done: { bar: "#10b981", dot: "bg-emerald-500", label: "הושלם" },
 };
 
-const PRIORITY_STYLES: Record<string, { className: string; label: string }> = {
-  low: { className: "bg-gray-100 text-gray-600", label: "נמוכה" },
-  medium: { className: "bg-amber-100 text-amber-700", label: "בינונית" },
-  high: { className: "bg-red-100 text-red-700", label: "גבוהה" },
-};
-
-const COL_WIDTH = 280;
-const ROW_HEIGHT = 150;
-const NODE_WIDTH = 210;
-
-function formatDate(iso?: string) {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit" });
-}
+const COL_WIDTH = 230;
+const ROW_HEIGHT = 84;
 
 function toDateInput(iso?: string) {
   if (!iso) return "";
@@ -98,56 +84,30 @@ type TaskNodeData = {
 
 type TaskFlowNode = Node<TaskNodeData, "taskNode">;
 
+// Minimalist "point" node: a status-colored dot + title. Critical tasks are
+// ringed red. All the details live in the click-to-open side panel.
 function TaskNode({ data }: NodeProps<TaskFlowNode>) {
   const status = STATUS_STYLES[data.status] ?? STATUS_STYLES.todo;
-  const priority = PRIORITY_STYLES[data.priority] ?? PRIORITY_STYLES.medium;
-  const start = formatDate(data.startDate);
-  const finish = formatDate(data.finishDate);
-
   return (
     <div
-      className={`relative overflow-hidden rounded-xl bg-white transition-all ${
-        data.isCritical ? "border-2 border-red-500" : "border border-gray-200"
+      className={`flex items-center gap-2 rounded-full bg-white py-1.5 pl-3 pr-2.5 transition-all ${
+        data.isCritical ? "border-2 border-red-500" : "border border-gray-300"
       } ${data.selected ? "ring-2 ring-emerald-500 ring-offset-1" : "shadow-sm"}`}
-      style={{ width: NODE_WIDTH, opacity: data.dimmed ? 0.28 : 1 }}
+      style={{ maxWidth: 210, opacity: data.dimmed ? 0.28 : 1 }}
       dir="rtl"
     >
-      <span className="absolute inset-y-0 right-0 w-1.5" style={{ background: status.bar }} />
       <Handle type="target" position={Position.Left} className="!h-2.5 !w-2.5 !bg-gray-400" />
-      <div className="py-2 pl-3 pr-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5">
-            <span className={`h-2 w-2 rounded-full ${status.dot}`} />
-            <span className="text-[11px] text-gray-500">{status.label}</span>
-          </div>
-          {data.isCritical ? (
-            <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
-              נתיב קריטי
-            </span>
-          ) : (
-            data.floatHours > 0 && (
-              <span className="text-[10px] text-gray-400">שהות {Math.round(data.floatHours)}ש׳</span>
-            )
-          )}
-        </div>
-
-        <p className="mt-1 text-sm font-semibold leading-snug text-gray-900">{data.label}</p>
-
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
-          <span className={`rounded-full px-1.5 py-0.5 ${priority.className}`}>{priority.label}</span>
-          {typeof data.durationHours === "number" && data.durationHours > 0 && (
-            <span className="text-gray-500">⏱ {data.durationHours}ש׳</span>
-          )}
-        </div>
-
-        {start && finish && (
-          <div className="mt-1 text-[11px] text-gray-500">
-            📅 {start} – {finish}
-          </div>
-        )}
-        {data.assigneeName && (
-          <div className="mt-0.5 truncate text-[11px] text-gray-500">👤 {data.assigneeName}</div>
-        )}
+      <span
+        className="h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-white"
+        style={{ background: data.isCritical ? "#ef4444" : status.bar }}
+        title={status.label}
+      />
+      <div className="min-w-0 leading-tight">
+        <p className="truncate text-xs font-semibold text-gray-900">{data.label}</p>
+        <p className="truncate text-[10px] text-gray-500">
+          {data.isCritical ? "קריטי" : status.label}
+          {typeof data.durationHours === "number" && data.durationHours > 0 ? ` · ${data.durationHours}ש׳` : ""}
+        </p>
       </div>
       <Handle type="source" position={Position.Right} className="!h-2.5 !w-2.5 !bg-gray-400" />
     </div>
