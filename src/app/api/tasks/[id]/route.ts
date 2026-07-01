@@ -5,6 +5,7 @@ import { getAccessibleTask, MANAGE_ROLES } from "@/lib/access";
 import Task, { TASK_PRIORITIES, TASK_STATUSES } from "@/models/Task";
 import TaskCollaborator from "@/models/TaskCollaborator";
 import ActivityLog from "@/models/ActivityLog";
+import { computeCriticalPath } from "@/lib/criticalPath";
 
 export async function GET(
   _request: Request,
@@ -60,6 +61,7 @@ export async function PATCH(
     assignedTo,
     checklist,
     dependsOn,
+    graphPosition,
   } = body as {
     title?: string;
     description?: string;
@@ -71,6 +73,7 @@ export async function PATCH(
     assignedTo?: string | null;
     checklist?: { text: string; done: boolean }[];
     dependsOn?: string[];
+    graphPosition?: { x: number; y: number } | null;
   };
 
   let previousStatus: string | undefined;
@@ -114,7 +117,34 @@ export async function PATCH(
     if (stage !== undefined) task.stage = stage;
     if (durationHours !== undefined) task.durationHours = durationHours;
     if (assignedTo !== undefined) task.assignedTo = assignedTo || undefined;
-    if (dependsOn !== undefined) task.dependsOn = dependsOn as unknown as typeof task.dependsOn;
+    if (dependsOn !== undefined) {
+      // Reject a dependency set that would introduce a cycle in the project's
+      // task graph. Build the would-be graph (this task's new edges plus every
+      // sibling's current edges) and reject if it is no longer acyclic.
+      const siblings = await Task.find({ projectId: task.projectId })
+        .select("_id dependsOn")
+        .lean();
+      const graphTasks = siblings.map((t) => ({
+        id: String(t._id),
+        dependsOn:
+          String(t._id) === id
+            ? dependsOn
+            : (t.dependsOn ?? []).map((d: unknown) => String(d)),
+      }));
+      if (computeCriticalPath(graphTasks).hasCycle) {
+        return NextResponse.json(
+          { error: "לא ניתן להוסיף תלות - הדבר ייצור מעגל בין המשימות" },
+          { status: 400 },
+        );
+      }
+      task.dependsOn = dependsOn as unknown as typeof task.dependsOn;
+    }
+    if (graphPosition !== undefined) {
+      task.graphPosition =
+        graphPosition && typeof graphPosition.x === "number" && typeof graphPosition.y === "number"
+          ? { x: graphPosition.x, y: graphPosition.y }
+          : undefined;
+    }
   }
 
   await task.save();

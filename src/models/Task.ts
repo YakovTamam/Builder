@@ -30,6 +30,12 @@ const taskSchema = new Schema(
     sequenceOrder: { type: Number },
     // Tasks that must be completed (status "done") before this one can start.
     dependsOn: [{ type: Schema.Types.ObjectId, ref: "Task" }],
+    // Saved 2D position on the critical-path graph canvas. When absent, the
+    // graph falls back to an automatic layered layout computed from dependsOn.
+    graphPosition: {
+      x: { type: Number },
+      y: { type: Number },
+    },
     checklist: [
       {
         text: { type: String, required: true },

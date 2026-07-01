@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import TaskGraph, { type GraphTask } from "./TaskGraph";
 
 const STATUS_COLUMNS = [
   { value: "todo", label: "לביצוע" },
@@ -26,14 +27,18 @@ type TaskItem = {
   durationHours?: number;
   dueDate?: string;
   parentTaskId?: string;
+  dependsOn?: string[];
+  graphPosition?: { x?: number; y?: number };
 };
+
+type ProjectItem = { _id: string; name: string; startDate?: string };
 
 export default function TaskBoard({
   projects,
   selectedProjectId,
   canManage,
 }: {
-  projects: { _id: string; name: string }[];
+  projects: ProjectItem[];
   selectedProjectId?: string;
   canManage: boolean;
 }) {
@@ -41,6 +46,7 @@ export default function TaskBoard({
   const searchParams = useSearchParams();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<"board" | "graph">("board");
 
   const projectId = selectedProjectId ?? projects[0]?._id;
   const selectedProject = projects.find((p) => p._id === projectId);
@@ -109,8 +115,39 @@ export default function TaskBoard({
         </div>
       )}
 
+      <div className="inline-flex self-start rounded-lg border border-gray-200 bg-white p-1 text-sm">
+        <button
+          type="button"
+          onClick={() => setView("board")}
+          className={`rounded-md px-3 py-1.5 transition-colors ${
+            view === "board" ? "bg-emerald-600 text-white" : "text-gray-600 hover:bg-gray-100"
+          }`}
+        >
+          לוח משימות
+        </button>
+        <button
+          type="button"
+          onClick={() => setView("graph")}
+          className={`rounded-md px-3 py-1.5 transition-colors ${
+            view === "graph" ? "bg-emerald-600 text-white" : "text-gray-600 hover:bg-gray-100"
+          }`}
+        >
+          מפת ענפים (נתיב קריטי)
+        </button>
+      </div>
+
       {loading ? (
         <p className="text-gray-500 text-sm">טוען משימות...</p>
+      ) : view === "graph" ? (
+        projectId ? (
+          <TaskGraph
+            projectId={projectId}
+            projectStartDate={selectedProject?.startDate}
+            tasks={tasks as GraphTask[]}
+            canManage={canManage}
+            onReload={loadTasks}
+          />
+        ) : null
       ) : (
         <div className="font-project-tasks grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {STATUS_COLUMNS.map((column) => {

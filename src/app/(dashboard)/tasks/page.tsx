@@ -39,7 +39,11 @@ export default async function TasksPage({
         </div>
       ) : (
         <TaskBoard
-          projects={projects.map((p) => ({ _id: String(p._id), name: p.name }))}
+          projects={projects.map((p) => ({
+            _id: String(p._id),
+            name: p.name,
+            startDate: p.startDate ? new Date(p.startDate).toISOString() : undefined,
+          }))}
           selectedProjectId={selectedProjectId}
           canManage={canManage}
         />
