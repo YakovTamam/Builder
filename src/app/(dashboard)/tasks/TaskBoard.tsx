@@ -29,6 +29,8 @@ type TaskItem = {
   parentTaskId?: string;
   dependsOn?: string[];
   graphPosition?: { x?: number; y?: number };
+  assignedTo?: string;
+  stage?: string;
 };
 
 type ProjectItem = { _id: string; name: string; startDate?: string };
