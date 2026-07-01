@@ -57,7 +57,6 @@ export async function PATCH(
     dueDate,
     stage,
     durationHours,
-    workersCount,
     assignedTo,
     checklist,
     dependsOn,
@@ -69,7 +68,6 @@ export async function PATCH(
     dueDate?: string;
     stage?: string;
     durationHours?: number;
-    workersCount?: number;
     assignedTo?: string | null;
     checklist?: { text: string; done: boolean }[];
     dependsOn?: string[];
@@ -115,7 +113,6 @@ export async function PATCH(
     if (dueDate !== undefined) task.dueDate = dueDate ? new Date(dueDate) : undefined;
     if (stage !== undefined) task.stage = stage;
     if (durationHours !== undefined) task.durationHours = durationHours;
-    if (workersCount !== undefined) task.workersCount = workersCount;
     if (assignedTo !== undefined) task.assignedTo = assignedTo || undefined;
     if (dependsOn !== undefined) task.dependsOn = dependsOn as unknown as typeof task.dependsOn;
   }

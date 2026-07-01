@@ -97,7 +97,7 @@ export default function PhotoGallery({
         <select
           value={projectId}
           onChange={(e) => handleProjectChange(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:max-w-xs"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:max-w-xs"
         >
           {projects.map((project) => (
             <option key={project._id} value={project._id}>
@@ -108,48 +108,48 @@ export default function PhotoGallery({
 
         <button
           onClick={() => setShowForm((prev) => !prev)}
-          className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium text-center"
+          className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium text-center"
         >
           {showForm ? "ביטול" : "+ הוספת תמונה"}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+        <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
           <div className="flex flex-col gap-1 sm:col-span-3">
-            <label className="text-sm text-zinc-300">כתובת תמונה (URL)</label>
+            <label className="text-sm text-gray-700">כתובת תמונה (URL)</label>
             <input
               required
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://..."
-              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-300">שלב</label>
+            <label className="text-sm text-gray-700">שלב</label>
             <input
               value={stage}
               onChange={(e) => setStage(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-300">מיקום</label>
+            <label className="text-sm text-gray-700">מיקום</label>
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
-          {error && <p className="text-sm text-red-400 sm:col-span-3">{error}</p>}
+          {error && <p className="text-sm text-red-600 sm:col-span-3">{error}</p>}
 
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50 sm:col-span-3"
+            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50 sm:col-span-3"
           >
             {submitting ? "מוסיף..." : "הוסף תמונה"}
           </button>
@@ -157,25 +157,25 @@ export default function PhotoGallery({
       )}
 
       {loading ? (
-        <p className="text-zinc-400 text-sm">טוען תמונות...</p>
+        <p className="text-gray-500 text-sm">טוען תמונות...</p>
       ) : photos.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-400 text-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 text-gray-500 text-sm">
           אין תמונות עדיין לפרויקט זה.
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {photos.map((photo) => (
-            <div key={photo._id} className="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 flex flex-col">
+            <div key={photo._id} className="rounded-xl overflow-hidden border border-gray-200 bg-white flex flex-col">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={photo.url} alt={photo.stage ?? "תמונה"} className="w-full aspect-square object-cover" />
               <div className="p-2 flex flex-col gap-1">
-                <div className="flex flex-wrap gap-1 text-xs text-zinc-400">
-                  {photo.stage && <span className="rounded-full bg-zinc-800 px-2 py-0.5">{photo.stage}</span>}
-                  {photo.location && <span className="rounded-full bg-zinc-800 px-2 py-0.5">{photo.location}</span>}
+                <div className="flex flex-wrap gap-1 text-xs text-gray-500">
+                  {photo.stage && <span className="rounded-full bg-white px-2 py-0.5">{photo.stage}</span>}
+                  {photo.location && <span className="rounded-full bg-white px-2 py-0.5">{photo.location}</span>}
                 </div>
-                <div className="flex items-center justify-between text-xs text-zinc-500">
+                <div className="flex items-center justify-between text-xs text-gray-400">
                   <span>{photo.uploadedBy?.name ?? ""}</span>
-                  <button onClick={() => handleDelete(photo._id)} className="hover:text-red-400">
+                  <button onClick={() => handleDelete(photo._id)} className="hover:text-red-600">
                     מחק
                   </button>
                 </div>

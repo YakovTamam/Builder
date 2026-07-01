@@ -4,11 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const STATUS_OPTIONS = [
-  { value: "ordered", label: "הוזמן", className: "bg-zinc-700 text-zinc-300" },
-  { value: "in_transit", label: "בדרך", className: "bg-blue-700/30 text-blue-400" },
-  { value: "arrived", label: "הגיע", className: "bg-emerald-700/30 text-emerald-400" },
-  { value: "missing", label: "חסר", className: "bg-red-700/30 text-red-400" },
-  { value: "issue", label: "בעיה", className: "bg-amber-700/30 text-amber-400" },
+  { value: "ordered", label: "הוזמן", className: "bg-gray-100 text-gray-700" },
+  { value: "in_transit", label: "בדרך", className: "bg-blue-100 text-blue-700" },
+  { value: "arrived", label: "הגיע", className: "bg-emerald-100 text-emerald-700" },
+  { value: "missing", label: "חסר", className: "bg-red-100 text-red-700" },
+  { value: "issue", label: "בעיה", className: "bg-amber-100 text-amber-700" },
 ] as const;
 
 const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map((s) => [s.value, s]));
@@ -125,7 +125,7 @@ export default function MaterialsBoard({
         <select
           value={projectId}
           onChange={(e) => handleProjectChange(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:max-w-xs"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:max-w-xs"
         >
           {projects.map((project) => (
             <option key={project._id} value={project._id}>
@@ -137,7 +137,7 @@ export default function MaterialsBoard({
         {canManage && (
           <button
             onClick={() => setShowForm((prev) => !prev)}
-            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium text-center"
+            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium text-center"
           >
             {showForm ? "ביטול" : "+ חומר חדש"}
           </button>
@@ -145,60 +145,60 @@ export default function MaterialsBoard({
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+        <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-300">שם החומר</label>
+            <label className="text-sm text-gray-700">שם החומר</label>
             <input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-300">כמות</label>
+            <label className="text-sm text-gray-700">כמות</label>
             <input
               type="number"
               required
               min={0}
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-300">יחידה</label>
+            <label className="text-sm text-gray-700">יחידה</label>
             <input
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
               placeholder="טון, יח׳..."
-              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-300">ספק</label>
+            <label className="text-sm text-gray-700">ספק</label>
             <input
               value={supplier}
               onChange={(e) => setSupplier(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-zinc-300">תאריך צפוי</label>
+            <label className="text-sm text-gray-700">תאריך צפוי</label>
             <input
               type="date"
               value={expectedDate}
               onChange={(e) => setExpectedDate(e.target.value)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
-          {error && <p className="text-sm text-red-400 sm:col-span-2 lg:col-span-5">{error}</p>}
+          {error && <p className="text-sm text-red-600 sm:col-span-2 lg:col-span-5">{error}</p>}
 
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50 sm:col-span-2 lg:col-span-5"
+            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50 sm:col-span-2 lg:col-span-5"
           >
             {submitting ? "מוסיף..." : "הוסף חומר"}
           </button>
@@ -206,9 +206,9 @@ export default function MaterialsBoard({
       )}
 
       {loading ? (
-        <p className="text-zinc-400 text-sm">טוען חומרים...</p>
+        <p className="text-gray-500 text-sm">טוען חומרים...</p>
       ) : materials.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-400 text-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 text-gray-500 text-sm">
           אין חומרים רשומים לפרויקט זה.
         </div>
       ) : (
@@ -216,10 +216,10 @@ export default function MaterialsBoard({
           {materials.map((material) => {
             const statusInfo = STATUS_MAP[material.status] ?? STATUS_OPTIONS[0];
             return (
-              <div key={material._id} className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
+              <div key={material._id} className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
                 <div className="flex flex-col gap-1">
                   <p className="font-medium">{material.name}</p>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-400">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
                     <span>
                       {material.quantity} {material.unit ?? ""}
                     </span>
@@ -238,7 +238,7 @@ export default function MaterialsBoard({
                     className={`rounded-full px-2.5 py-1 text-xs font-medium border-0 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-70 ${statusInfo.className}`}
                   >
                     {STATUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value} className="bg-zinc-900 text-zinc-100">
+                      <option key={option.value} value={option.value} className="bg-white text-gray-900">
                         {option.label}
                       </option>
                     ))}
@@ -247,7 +247,7 @@ export default function MaterialsBoard({
                   {canManage && (
                     <button
                       onClick={() => handleDelete(material._id)}
-                      className="rounded-lg border border-zinc-700 px-2 py-1 text-xs hover:bg-zinc-800 transition-colors"
+                      className="rounded-lg border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100 transition-colors"
                     >
                       מחק
                     </button>

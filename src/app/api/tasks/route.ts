@@ -65,7 +65,6 @@ export async function POST(request: Request) {
     stage,
     type,
     durationHours,
-    workersCount,
     sequenceItems,
     checklist,
   } = body as {
@@ -77,8 +76,7 @@ export async function POST(request: Request) {
     stage?: string;
     type?: string;
     durationHours?: number;
-    workersCount?: number;
-    sequenceItems?: { title: string; durationHours?: number; workersCount?: number }[];
+    sequenceItems?: { title: string; durationHours?: number }[];
     checklist?: { text: string; done?: boolean }[];
   };
 
@@ -109,7 +107,6 @@ export async function POST(request: Request) {
     stage,
     type: taskType,
     durationHours,
-    workersCount,
     checklist: (checklist ?? []).map((item) => ({ text: item.text, done: !!item.done })),
   });
 
@@ -129,7 +126,6 @@ export async function POST(request: Request) {
         priority: "medium",
         type: "single" as const,
         durationHours: item.durationHours,
-        workersCount: item.workersCount,
         dueDate: new Date(cursor),
         parentTaskId: task._id,
         sequenceOrder: index + 1,

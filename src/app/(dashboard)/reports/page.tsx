@@ -24,7 +24,7 @@ const MATERIAL_STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  todo: "bg-zinc-500",
+  todo: "bg-gray-300",
   in_progress: "bg-blue-500",
   review: "bg-amber-500",
   done: "bg-emerald-500",
@@ -92,31 +92,31 @@ export default async function ReportsPage() {
       <h1 className="text-2xl font-semibold">דוחות והתקדמות</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 flex flex-col gap-2">
-          <span className="text-sm text-zinc-400">פרויקטים</span>
+        <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-2">
+          <span className="text-sm text-gray-500">פרויקטים</span>
           <span className="text-3xl font-bold">{projects.length}</span>
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 flex flex-col gap-2">
-          <span className="text-sm text-zinc-400">סה&quot;כ משימות</span>
+        <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-2">
+          <span className="text-sm text-gray-500">סה&quot;כ משימות</span>
           <span className="text-3xl font-bold">{totalTasks}</span>
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 flex flex-col gap-2">
-          <span className="text-sm text-zinc-400">משימות באיחור</span>
-          <span className="text-3xl font-bold text-red-400">{overdueCount}</span>
+        <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-2">
+          <span className="text-sm text-gray-500">משימות באיחור</span>
+          <span className="text-3xl font-bold text-red-600">{overdueCount}</span>
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 flex flex-col gap-2">
-          <span className="text-sm text-zinc-400">התראות שלא נקראו</span>
-          <span className="text-3xl font-bold text-amber-400">{unreadAlerts}</span>
+        <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-2">
+          <span className="text-sm text-gray-500">התראות שלא נקראו</span>
+          <span className="text-3xl font-bold text-amber-600">{unreadAlerts}</span>
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
         <h2 className="text-lg font-medium mb-3">משימות לפי סטטוס</h2>
         {totalTasks === 0 ? (
-          <p className="text-sm text-zinc-400">אין משימות עדיין.</p>
+          <p className="text-sm text-gray-500">אין משימות עדיין.</p>
         ) : (
           <div className="flex flex-col gap-3">
-            <div className="flex h-3 w-full overflow-hidden rounded-full bg-zinc-800">
+            <div className="flex h-3 w-full overflow-hidden rounded-full bg-white">
               {TASK_STATUSES.map((status) => {
                 const pct = (taskStatusCounts[status] / totalTasks) * 100;
                 if (pct === 0) return null;
@@ -127,7 +127,7 @@ export default async function ReportsPage() {
               {TASK_STATUSES.map((status) => (
                 <div key={status} className="flex items-center gap-2">
                   <span className={`h-2.5 w-2.5 rounded-full ${STATUS_COLORS[status]}`} />
-                  <span className="text-zinc-400">{STATUS_LABELS[status]}</span>
+                  <span className="text-gray-500">{STATUS_LABELS[status]}</span>
                   <span className="font-medium">{taskStatusCounts[status]}</span>
                 </div>
               ))}
@@ -137,12 +137,12 @@ export default async function ReportsPage() {
       </div>
 
       {totalMaterials > 0 && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
           <h2 className="text-lg font-medium mb-3">חומרים לפי סטטוס</h2>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-sm">
             {MATERIAL_STATUSES.map((status) => (
-              <div key={status} className="flex flex-col gap-1 rounded-lg border border-zinc-800 p-2">
-                <span className="text-zinc-400">{MATERIAL_STATUS_LABELS[status]}</span>
+              <div key={status} className="flex flex-col gap-1 rounded-lg border border-gray-200 p-2">
+                <span className="text-gray-500">{MATERIAL_STATUS_LABELS[status]}</span>
                 <span className="text-xl font-semibold">{materialStatusCounts[status]}</span>
               </div>
             ))}
@@ -150,10 +150,10 @@ export default async function ReportsPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
         <h2 className="text-lg font-medium mb-3">התקדמות לפי פרויקט</h2>
         {projects.length === 0 ? (
-          <p className="text-sm text-zinc-400">אין פרויקטים עדיין.</p>
+          <p className="text-sm text-gray-500">אין פרויקטים עדיין.</p>
         ) : (
           <div className="flex flex-col gap-4">
             {projects.map((project) => {
@@ -166,15 +166,15 @@ export default async function ReportsPage() {
                 <Link
                   key={String(project._id)}
                   href={`/projects/${project._id}`}
-                  className="flex flex-col gap-1.5 rounded-lg border border-zinc-800 p-3 hover:border-zinc-700"
+                  className="flex flex-col gap-1.5 rounded-lg border border-gray-200 p-3 hover:border-gray-400"
                 >
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{project.name}</span>
-                    <span className="text-zinc-400">
+                    <span className="text-gray-500">
                       {total > 0 ? `${done}/${total} משימות הושלמו (${taskProgress}%)` : "אין משימות"}
                     </span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-zinc-800">
+                  <div className="h-2 w-full rounded-full bg-white">
                     <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${taskProgress}%` }} />
                   </div>
                 </Link>

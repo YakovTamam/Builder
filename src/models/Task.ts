@@ -25,7 +25,6 @@ const taskSchema = new Schema(
     // type: "single" - independent task. "sequence" - generates a chain of follow-up tasks.
     type: { type: String, enum: TASK_TYPES, default: "single" },
     durationHours: { type: Number, min: 0 },
-    workersCount: { type: Number, min: 0 },
     // Links generated child tasks back to the sequence task that created them.
     parentTaskId: { type: Schema.Types.ObjectId, ref: "Task" },
     sequenceOrder: { type: Number },

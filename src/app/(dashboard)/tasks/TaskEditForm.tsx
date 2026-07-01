@@ -26,7 +26,6 @@ type TaskValues = {
   dueDate?: string | Date | null;
   stage?: string;
   durationHours?: number;
-  workersCount?: number;
   dependsOn?: string[];
   checklist?: ChecklistItem[];
 };
@@ -45,7 +44,6 @@ export default function TaskEditForm({
   const [dueDate, setDueDate] = useState(toDateInputValue(task.dueDate));
   const [stage, setStage] = useState(task.stage ?? "");
   const [durationHours, setDurationHours] = useState(task.durationHours?.toString() ?? "");
-  const [workersCount, setWorkersCount] = useState(task.workersCount?.toString() ?? "");
   const [dependsOn, setDependsOn] = useState<string[]>(task.dependsOn ?? []);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist ?? []);
   const [newChecklistItem, setNewChecklistItem] = useState("");
@@ -82,7 +80,6 @@ export default function TaskEditForm({
           dueDate: dueDate || undefined,
           stage: stage || undefined,
           durationHours: durationHours ? Number(durationHours) : undefined,
-          workersCount: workersCount ? Number(workersCount) : undefined,
           dependsOn,
           checklist,
         }),
@@ -105,7 +102,7 @@ export default function TaskEditForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <label htmlFor="title" className="text-sm text-zinc-300">
+        <label htmlFor="title" className="text-sm text-gray-700">
           כותרת המשימה
         </label>
         <input
@@ -114,12 +111,12 @@ export default function TaskEditForm({
           required
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="description" className="text-sm text-zinc-300">
+        <label htmlFor="description" className="text-sm text-gray-700">
           תיאור
         </label>
         <textarea
@@ -127,20 +124,20 @@ export default function TaskEditForm({
           rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
-          <label htmlFor="priority" className="text-sm text-zinc-300">
+          <label htmlFor="priority" className="text-sm text-gray-700">
             עדיפות
           </label>
           <select
             id="priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {PRIORITY_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -151,7 +148,7 @@ export default function TaskEditForm({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="durationHours" className="text-sm text-zinc-300">
+          <label htmlFor="durationHours" className="text-sm text-gray-700">
             משך (שעות)
           </label>
           <input
@@ -160,28 +157,14 @@ export default function TaskEditForm({
             min={0}
             value={durationHours}
             onChange={(e) => setDurationHours(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label htmlFor="workersCount" className="text-sm text-zinc-300">
-            כמות פועלים
-          </label>
-          <input
-            id="workersCount"
-            type="number"
-            min={0}
-            value={workersCount}
-            onChange={(e) => setWorkersCount(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
-          <label htmlFor="dueDate" className="text-sm text-zinc-300">
+          <label htmlFor="dueDate" className="text-sm text-gray-700">
             תאריך יעד
           </label>
           <input
@@ -189,12 +172,12 @@ export default function TaskEditForm({
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="stage" className="text-sm text-zinc-300">
+          <label htmlFor="stage" className="text-sm text-gray-700">
             שלב
           </label>
           <input
@@ -202,17 +185,17 @@ export default function TaskEditForm({
             type="text"
             value={stage}
             onChange={(e) => setStage(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm text-zinc-300">משימות חוסמות (תלות)</label>
+        <label className="text-sm text-gray-700">משימות חוסמות (תלות)</label>
         {siblingTasks.length === 0 ? (
-          <p className="text-xs text-zinc-500">אין משימות אחרות בפרויקט</p>
+          <p className="text-xs text-gray-400">אין משימות אחרות בפרויקט</p>
         ) : (
-          <div className="flex flex-col gap-1 max-h-48 overflow-y-auto rounded-lg border border-zinc-700 p-2">
+          <div className="flex flex-col gap-1 max-h-48 overflow-y-auto rounded-lg border border-gray-300 p-2">
             {siblingTasks.map((sibling) => (
               <label key={sibling._id} className="flex items-center gap-2 text-sm px-1 py-1">
                 <input
@@ -229,15 +212,15 @@ export default function TaskEditForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm text-zinc-300">רשימת בדיקה</label>
+        <label className="text-sm text-gray-700">רשימת בדיקה</label>
         <div className="flex flex-col gap-1">
           {checklist.map((item, index) => (
             <div key={index} className="flex items-center gap-2 text-sm">
-              <span className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2">{item.text}</span>
+              <span className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2">{item.text}</span>
               <button
                 type="button"
                 onClick={() => removeChecklistItem(index)}
-                className="text-red-400 hover:text-red-300 text-sm px-2"
+                className="text-red-600 hover:text-red-700 text-sm px-2"
               >
                 הסר
               </button>
@@ -250,32 +233,32 @@ export default function TaskEditForm({
             value={newChecklistItem}
             onChange={(e) => setNewChecklistItem(e.target.value)}
             placeholder="פריט חדש"
-            className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="flex-1 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
           <button
             type="button"
             onClick={addChecklistItem}
-            className="text-xs text-emerald-400 hover:text-emerald-300 px-2"
+            className="text-xs text-emerald-600 hover:text-emerald-700 px-2"
           >
             + הוסף
           </button>
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       <div className="flex items-center gap-3">
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50"
+          className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50"
         >
           {loading ? "שומר..." : "שמור שינויים"}
         </button>
         <button
           type="button"
           onClick={() => router.push(`/tasks/${task._id}`)}
-          className="rounded-lg border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-800 transition-colors"
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-100 transition-colors"
         >
           ביטול
         </button>

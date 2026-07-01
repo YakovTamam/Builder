@@ -9,7 +9,7 @@ const PRIORITY_OPTIONS = [
   { value: "high", label: "גבוהה" },
 ];
 
-type SequenceItem = { title: string; durationHours: string; workersCount: string };
+type SequenceItem = { title: string; durationHours: string };
 
 export default function TaskForm({
   projectId,
@@ -25,10 +25,9 @@ export default function TaskForm({
   const [dueDate, setDueDate] = useState("");
   const [stage, setStage] = useState("");
   const [durationHours, setDurationHours] = useState("");
-  const [workersCount, setWorkersCount] = useState("");
   const [type, setType] = useState<"single" | "sequence">("single");
   const [sequenceItems, setSequenceItems] = useState<SequenceItem[]>([
-    { title: "", durationHours: "", workersCount: "" },
+    { title: "", durationHours: "" },
   ]);
   const [checklistItems, setChecklistItems] = useState<string[]>([]);
   const [newChecklistItem, setNewChecklistItem] = useState("");
@@ -77,7 +76,7 @@ export default function TaskForm({
   }
 
   function addSequenceItem() {
-    setSequenceItems((prev) => [...prev, { title: "", durationHours: "", workersCount: "" }]);
+    setSequenceItems((prev) => [...prev, { title: "", durationHours: "" }]);
   }
 
   function removeSequenceItem(index: number) {
@@ -97,7 +96,6 @@ export default function TaskForm({
       dueDate: dueDate || undefined,
       stage: stage || undefined,
       durationHours: durationHours ? Number(durationHours) : undefined,
-      workersCount: workersCount ? Number(workersCount) : undefined,
       type,
       checklist: checklistItems.map((text) => ({ text, done: false })),
     };
@@ -108,7 +106,6 @@ export default function TaskForm({
         .map((item) => ({
           title: item.title,
           durationHours: item.durationHours ? Number(item.durationHours) : undefined,
-          workersCount: item.workersCount ? Number(item.workersCount) : undefined,
         }));
     }
 
@@ -136,8 +133,8 @@ export default function TaskForm({
   return (
     <div className="flex flex-col gap-4">
       {templates.length > 0 && (
-        <form onSubmit={handleTemplateSubmit} className="flex flex-col gap-2 rounded-lg border border-zinc-800 p-3">
-          <label htmlFor="templateId" className="text-sm text-zinc-300">
+        <form onSubmit={handleTemplateSubmit} className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3">
+          <label htmlFor="templateId" className="text-sm text-gray-700">
             יצירה מתבנית (אופציונלי)
           </label>
           <div className="flex items-center gap-2">
@@ -145,7 +142,7 @@ export default function TaskForm({
               id="templateId"
               value={templateId}
               onChange={(e) => setTemplateId(e.target.value)}
-              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="flex-1 rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">בחר תבנית...</option>
               {templates.map((tpl) => (
@@ -157,7 +154,7 @@ export default function TaskForm({
             <button
               type="submit"
               disabled={!templateId || loading}
-              className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50"
+              className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50"
             >
               צור מהתבנית
             </button>
@@ -167,7 +164,7 @@ export default function TaskForm({
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <label htmlFor="title" className="text-sm text-zinc-300">
+        <label htmlFor="title" className="text-sm text-gray-700">
           כותרת המשימה
         </label>
         <input
@@ -176,12 +173,12 @@ export default function TaskForm({
           required
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="description" className="text-sm text-zinc-300">
+        <label htmlFor="description" className="text-sm text-gray-700">
           תיאור
         </label>
         <textarea
@@ -189,46 +186,46 @@ export default function TaskForm({
           rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm text-zinc-300">סוג משימה</label>
+        <label className="text-sm text-gray-700">סוג משימה</label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setType("single")}
             className={`rounded-lg border px-3 py-2 text-sm text-start transition-colors ${
-              type === "single" ? "border-emerald-500 bg-emerald-700/20" : "border-zinc-700 bg-zinc-800"
+              type === "single" ? "border-emerald-500 bg-emerald-50" : "border-gray-300 bg-white"
             }`}
           >
             <span className="font-medium">משימה רגילה</span>
-            <p className="text-xs text-zinc-400 mt-0.5">משימה עצמאית, ללא המשך אוטומטי.</p>
+            <p className="text-xs text-gray-500 mt-0.5">משימה עצמאית, ללא המשך אוטומטי.</p>
           </button>
           <button
             type="button"
             onClick={() => setType("sequence")}
             className={`rounded-lg border px-3 py-2 text-sm text-start transition-colors ${
-              type === "sequence" ? "border-emerald-500 bg-emerald-700/20" : "border-zinc-700 bg-zinc-800"
+              type === "sequence" ? "border-emerald-500 bg-emerald-50" : "border-gray-300 bg-white"
             }`}
           >
             <span className="font-medium">משימה יוצרת רצף</span>
-            <p className="text-xs text-zinc-400 mt-0.5">בסיום, נוצרות אוטומטית משימות המשך לפי סדר.</p>
+            <p className="text-xs text-gray-500 mt-0.5">בסיום, נוצרות אוטומטית משימות המשך לפי סדר.</p>
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
-          <label htmlFor="priority" className="text-sm text-zinc-300">
+          <label htmlFor="priority" className="text-sm text-gray-700">
             עדיפות
           </label>
           <select
             id="priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {PRIORITY_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -239,7 +236,7 @@ export default function TaskForm({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="durationHours" className="text-sm text-zinc-300">
+          <label htmlFor="durationHours" className="text-sm text-gray-700">
             משך (שעות)
           </label>
           <input
@@ -248,28 +245,14 @@ export default function TaskForm({
             min={0}
             value={durationHours}
             onChange={(e) => setDurationHours(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label htmlFor="workersCount" className="text-sm text-zinc-300">
-            כמות פועלים
-          </label>
-          <input
-            id="workersCount"
-            type="number"
-            min={0}
-            value={workersCount}
-            onChange={(e) => setWorkersCount(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
-          <label htmlFor="dueDate" className="text-sm text-zinc-300">
+          <label htmlFor="dueDate" className="text-sm text-gray-700">
             תאריך יעד
           </label>
           <input
@@ -277,12 +260,12 @@ export default function TaskForm({
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="stage" className="text-sm text-zinc-300">
+          <label htmlFor="stage" className="text-sm text-gray-700">
             שלב
           </label>
           <input
@@ -290,32 +273,32 @@ export default function TaskForm({
             type="text"
             value={stage}
             onChange={(e) => setStage(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
       </div>
 
       {type === "sequence" && (
-        <div className="flex flex-col gap-3 rounded-lg border border-zinc-800 p-3">
+        <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium">משימות המשך ברצף</h3>
             <button
               type="button"
               onClick={addSequenceItem}
-              className="text-xs text-emerald-400 hover:text-emerald-300"
+              className="text-xs text-emerald-600 hover:text-emerald-700"
             >
               + הוסף משימה
             </button>
           </div>
 
           {sequenceItems.map((item, index) => (
-            <div key={index} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
+            <div key={index} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-center">
               <input
                 type="text"
                 placeholder={`כותרת משימה ${index + 1}`}
                 value={item.title}
                 onChange={(e) => updateSequenceItem(index, "title", e.target.value)}
-                className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <input
                 type="number"
@@ -323,21 +306,13 @@ export default function TaskForm({
                 placeholder="שעות"
                 value={item.durationHours}
                 onChange={(e) => updateSequenceItem(index, "durationHours", e.target.value)}
-                className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              <input
-                type="number"
-                min={0}
-                placeholder="פועלים"
-                value={item.workersCount}
-                onChange={(e) => updateSequenceItem(index, "workersCount", e.target.value)}
-                className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm w-24 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               {sequenceItems.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeSequenceItem(index)}
-                  className="text-red-400 hover:text-red-300 text-sm px-2"
+                  className="text-red-600 hover:text-red-700 text-sm px-2"
                 >
                   הסר
                 </button>
@@ -349,15 +324,15 @@ export default function TaskForm({
 
       {type === "single" && (
         <div className="flex flex-col gap-2">
-          <label className="text-sm text-zinc-300">רשימת בדיקה (אופציונלי)</label>
+          <label className="text-sm text-gray-700">רשימת בדיקה (אופציונלי)</label>
           <div className="flex flex-col gap-1">
             {checklistItems.map((item, index) => (
               <div key={index} className="flex items-center gap-2 text-sm">
-                <span className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2">{item}</span>
+                <span className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2">{item}</span>
                 <button
                   type="button"
                   onClick={() => removeChecklistItem(index)}
-                  className="text-red-400 hover:text-red-300 text-sm px-2"
+                  className="text-red-600 hover:text-red-700 text-sm px-2"
                 >
                   הסר
                 </button>
@@ -370,12 +345,12 @@ export default function TaskForm({
               value={newChecklistItem}
               onChange={(e) => setNewChecklistItem(e.target.value)}
               placeholder="פריט חדש"
-              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="flex-1 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <button
               type="button"
               onClick={addChecklistItem}
-              className="text-xs text-emerald-400 hover:text-emerald-300 px-2"
+              className="text-xs text-emerald-600 hover:text-emerald-700 px-2"
             >
               + הוסף
             </button>
@@ -383,12 +358,12 @@ export default function TaskForm({
         </div>
       )}
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50"
+        className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50"
       >
         {loading ? "יוצר..." : "צור משימה"}
       </button>

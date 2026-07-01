@@ -85,7 +85,7 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <label htmlFor="name" className="text-sm text-zinc-300">
+        <label htmlFor="name" className="text-sm text-gray-700">
           שם הפרויקט
         </label>
         <input
@@ -94,12 +94,12 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="address" className="text-sm text-zinc-300">
+        <label htmlFor="address" className="text-sm text-gray-700">
           כתובת
         </label>
         <input
@@ -107,20 +107,20 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
           type="text"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
-          <label htmlFor="status" className="text-sm text-zinc-300">
+          <label htmlFor="status" className="text-sm text-gray-700">
             סטטוס
           </label>
           <select
             id="status"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             {STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -131,7 +131,7 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="budget" className="text-sm text-zinc-300">
+          <label htmlFor="budget" className="text-sm text-gray-700">
             תקציב (₪)
           </label>
           <input
@@ -140,14 +140,14 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
             min={0}
             value={budget}
             onChange={(e) => setBudget(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
-          <label htmlFor="startDate" className="text-sm text-zinc-300">
+          <label htmlFor="startDate" className="text-sm text-gray-700">
             תאריך התחלה
           </label>
           <input
@@ -155,12 +155,12 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="dueDate" className="text-sm text-zinc-300">
+          <label htmlFor="dueDate" className="text-sm text-gray-700">
             תאריך מסירה
           </label>
           <input
@@ -168,14 +168,14 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
       </div>
 
       {isEdit && (
         <div className="flex flex-col gap-1">
-          <label htmlFor="progress" className="text-sm text-zinc-300">
+          <label htmlFor="progress" className="text-sm text-gray-700">
             התקדמות (%)
           </label>
           <input
@@ -185,17 +185,17 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
             max={100}
             value={progress}
             onChange={(e) => setProgress(e.target.value)}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
       )}
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium disabled:opacity-50"
+        className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50"
       >
         {loading ? "שומר..." : isEdit ? "שמור שינויים" : "צור פרויקט"}
       </button>

@@ -34,7 +34,7 @@ export default async function EditProjectPage({
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
       <h1 className="text-2xl font-semibold">עריכת פרויקט</h1>
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
         <ProjectForm
           project={{
             _id: String(project._id),

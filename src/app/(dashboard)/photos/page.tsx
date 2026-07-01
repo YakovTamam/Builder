@@ -28,7 +28,7 @@ export default async function PhotosPage({
       <h1 className="text-2xl font-semibold">תמונות מהשטח</h1>
 
       {projects.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-zinc-400 text-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 text-gray-500 text-sm">
           אין פרויקטים עדיין. יש ליצור פרויקט כדי להעלות תמונות.
         </div>
       ) : (

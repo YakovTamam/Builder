@@ -12,9 +12,9 @@ const STATUS_COLUMNS = [
 ] as const;
 
 const PRIORITY_LABELS: Record<string, { label: string; className: string }> = {
-  low: { label: "נמוכה", className: "bg-zinc-700 text-zinc-300" },
-  medium: { label: "בינונית", className: "bg-amber-700/30 text-amber-400" },
-  high: { label: "גבוהה", className: "bg-red-700/30 text-red-400" },
+  low: { label: "נמוכה", className: "bg-gray-100 text-gray-700" },
+  medium: { label: "בינונית", className: "bg-amber-100 text-amber-700" },
+  high: { label: "גבוהה", className: "bg-red-100 text-red-700" },
 };
 
 type TaskItem = {
@@ -24,7 +24,6 @@ type TaskItem = {
   priority: string;
   type: string;
   durationHours?: number;
-  workersCount?: number;
   dueDate?: string;
   parentTaskId?: string;
 };
@@ -44,6 +43,7 @@ export default function TaskBoard({
   const [loading, setLoading] = useState(true);
 
   const projectId = selectedProjectId ?? projects[0]?._id;
+  const selectedProject = projects.find((p) => p._id === projectId);
 
   const loadTasks = useCallback(async () => {
     if (!projectId) return;
@@ -83,7 +83,7 @@ export default function TaskBoard({
         <select
           value={projectId}
           onChange={(e) => handleProjectChange(e.target.value)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:max-w-xs"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:max-w-xs"
         >
           {projects.map((project) => (
             <option key={project._id} value={project._id}>
@@ -95,31 +95,38 @@ export default function TaskBoard({
         {canManage && (
           <Link
             href={`/tasks/new?projectId=${projectId}`}
-            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors px-4 py-2 text-sm font-medium text-center"
+            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium text-center"
           >
             + משימה חדשה
           </Link>
         )}
       </div>
 
+      {selectedProject && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <p className="text-xs text-emerald-700">מציג משימות עבור</p>
+          <h2 className="font-project-tasks text-xl font-semibold text-emerald-900">{selectedProject.name}</h2>
+        </div>
+      )}
+
       {loading ? (
-        <p className="text-zinc-400 text-sm">טוען משימות...</p>
+        <p className="text-gray-500 text-sm">טוען משימות...</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="font-project-tasks grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {STATUS_COLUMNS.map((column) => {
             const columnTasks = tasks.filter((t) => t.status === column.value);
             return (
-              <div key={column.value} className="rounded-xl border border-zinc-800 bg-zinc-900 p-3 flex flex-col gap-3">
+              <div key={column.value} className="rounded-xl border border-gray-200 bg-white p-3 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <h2 className="font-medium text-sm">{column.label}</h2>
-                  <span className="text-xs text-zinc-500">{columnTasks.length}</span>
+                  <span className="text-xs text-gray-400">{columnTasks.length}</span>
                 </div>
 
                 <div className="flex flex-col gap-2">
                   {columnTasks.map((task) => {
                     const priority = PRIORITY_LABELS[task.priority] ?? PRIORITY_LABELS.medium;
                     return (
-                      <div key={task._id} className="rounded-lg border border-zinc-800 bg-zinc-950 p-3 flex flex-col gap-2">
+                      <div key={task._id} className="rounded-lg border border-gray-200 bg-gray-50 p-3 flex flex-col gap-2">
                         <Link href={`/tasks/${task._id}`} className="font-medium text-sm hover:underline">
                           {task.title}
                         </Link>
@@ -129,27 +136,26 @@ export default function TaskBoard({
                             {priority.label}
                           </span>
                           {task.type === "sequence" && (
-                            <span className="rounded-full px-2 py-0.5 bg-blue-700/30 text-blue-400">
+                            <span className="rounded-full px-2 py-0.5 bg-blue-100 text-blue-700">
                               רצף משימות
                             </span>
                           )}
                           {task.parentTaskId && (
-                            <span className="rounded-full px-2 py-0.5 bg-zinc-700 text-zinc-300">
+                            <span className="rounded-full px-2 py-0.5 bg-gray-100 text-gray-700">
                               חלק מרצף
                             </span>
                           )}
                         </div>
 
-                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-400">
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
                           {typeof task.durationHours === "number" && <span>⏱ {task.durationHours} שעות</span>}
-                          {typeof task.workersCount === "number" && <span>👷 {task.workersCount} פועלים</span>}
                           {task.dueDate && <span>📅 {new Date(task.dueDate).toLocaleDateString("he-IL")}</span>}
                         </div>
 
                         <select
                           value={task.status}
                           onChange={(e) => handleStatusChange(task._id, e.target.value)}
-                          className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                          className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         >
                           {STATUS_COLUMNS.map((s) => (
                             <option key={s.value} value={s.value}>
@@ -162,7 +168,7 @@ export default function TaskBoard({
                   })}
 
                   {columnTasks.length === 0 && (
-                    <p className="text-xs text-zinc-500 text-center py-4">אין משימות</p>
+                    <p className="text-xs text-gray-400 text-center py-4">אין משימות</p>
                   )}
                 </div>
               </div>
