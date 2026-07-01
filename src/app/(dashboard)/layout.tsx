@@ -17,6 +17,7 @@ const BASE_NAV_ITEMS = [
   { href: "/dashboard", label: "בית", icon: "🏠" },
   { href: "/projects", label: "פרויקטים", icon: "🏗️" },
   { href: "/tasks", label: "משימות", icon: "✅" },
+  { href: "/critical-path", label: "מפת ענף", icon: "🔗" },
   { href: "/photos", label: "תמונות", icon: "📷" },
   { href: "/materials", label: "חומרים", icon: "📦" },
   { href: "/alerts", label: "התראות", icon: "🔔" },
