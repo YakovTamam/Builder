@@ -6,6 +6,7 @@ import Task, { TASK_PRIORITIES, TASK_STATUSES } from "@/models/Task";
 import TaskCollaborator from "@/models/TaskCollaborator";
 import ActivityLog from "@/models/ActivityLog";
 import { computeCriticalPath } from "@/lib/criticalPath";
+import { sanitizeTaskLocation } from "@/lib/locations";
 
 export async function GET(
   _request: Request,
@@ -58,6 +59,7 @@ export async function PATCH(
     dueDate,
     stage,
     trade,
+    location,
     durationHours,
     assignedTo,
     checklist,
@@ -71,6 +73,7 @@ export async function PATCH(
     dueDate?: string;
     stage?: string;
     trade?: string | null;
+    location?: unknown;
     durationHours?: number;
     assignedTo?: string | null;
     checklist?: { text: string; done: boolean }[];
@@ -118,6 +121,7 @@ export async function PATCH(
     if (dueDate !== undefined) task.dueDate = dueDate ? new Date(dueDate) : undefined;
     if (stage !== undefined) task.stage = stage;
     if (trade !== undefined) task.trade = trade || undefined;
+    if (location !== undefined) task.location = sanitizeTaskLocation(location);
     if (durationHours !== undefined) task.durationHours = durationHours;
     if (assignedTo !== undefined) task.assignedTo = assignedTo || undefined;
     if (dependsOn !== undefined) {

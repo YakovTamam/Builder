@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
 import { getAccessibleTask, MANAGE_ROLES } from "@/lib/access";
 import { tradeLabel, tradeClassName } from "@/lib/trades";
+import { formatLocation } from "@/lib/locations";
 import Task from "@/models/Task";
 import TaskCollaborator from "@/models/TaskCollaborator";
 import ActivityLog from "@/models/ActivityLog";
@@ -185,6 +186,13 @@ export default async function TaskDetailPage({
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           <p className="text-xs text-gray-500 mb-1">שלב</p>
           <p className="font-medium">{task.stage}</p>
+        </div>
+      )}
+
+      {formatLocation(task.location) && (
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-xs text-gray-500 mb-1">מיקום</p>
+          <p className="font-medium">📍 {formatLocation(task.location)}</p>
         </div>
       )}
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { emptyLocations, type ProjectLocations } from "@/lib/locations";
 
 const STATUS_OPTIONS = [
   { value: "planning", label: "בתכנון" },
@@ -26,7 +27,81 @@ type ProjectFormValues = {
   startDate?: string | Date | null;
   dueDate?: string | Date | null;
   progress?: number;
+  locations?: ProjectLocations;
 };
+
+// Small editor for an ordered list of short labels (add + removable chips).
+function ListEditor({
+  label,
+  placeholder,
+  items,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  items: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const [draft, setDraft] = useState("");
+
+  function add() {
+    const value = draft.trim();
+    if (!value || items.includes(value)) {
+      setDraft("");
+      return;
+    }
+    onChange([...items, value]);
+    setDraft("");
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm text-gray-700">{label}</label>
+      {items.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {items.map((item) => (
+            <span
+              key={item}
+              className="flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700"
+            >
+              {item}
+              <button
+                type="button"
+                onClick={() => onChange(items.filter((i) => i !== item))}
+                className="text-gray-400 hover:text-red-600"
+                aria-label={`הסר ${item}`}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              add();
+            }
+          }}
+          placeholder={placeholder}
+          className="flex-1 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+        <button
+          type="button"
+          onClick={add}
+          className="shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-sm hover:bg-gray-100 transition-colors"
+        >
+          הוסף
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function ProjectForm({ project }: { project?: ProjectFormValues }) {
   const router = useRouter();
@@ -39,6 +114,7 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
   const [startDate, setStartDate] = useState(toDateInputValue(project?.startDate));
   const [dueDate, setDueDate] = useState(toDateInputValue(project?.dueDate));
   const [progress, setProgress] = useState(project?.progress?.toString() ?? "0");
+  const [locations, setLocations] = useState<ProjectLocations>(project?.locations ?? emptyLocations());
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -54,6 +130,7 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
       budget: budget ? Number(budget) : undefined,
       startDate: startDate || undefined,
       dueDate: dueDate || undefined,
+      locations,
     };
 
     if (isEdit) {
@@ -189,6 +266,33 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
           />
         </div>
       )}
+
+      <div className="flex flex-col gap-3 rounded-xl border border-gray-200 p-4">
+        <div>
+          <h3 className="text-sm font-medium text-gray-900">מיקומים בפרויקט</h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            הגדר בניינים, קומות ודירות — ואז אפשר לשייך כל משימה למיקום ולסנן לפיו.
+          </p>
+        </div>
+        <ListEditor
+          label="בניינים / מבנים"
+          placeholder="למשל: בניין A"
+          items={locations.buildings}
+          onChange={(buildings) => setLocations((l) => ({ ...l, buildings }))}
+        />
+        <ListEditor
+          label="קומות"
+          placeholder="למשל: קומה 3"
+          items={locations.floors}
+          onChange={(floors) => setLocations((l) => ({ ...l, floors }))}
+        />
+        <ListEditor
+          label="דירות / יחידות"
+          placeholder="למשל: דירה 12"
+          items={locations.units}
+          onChange={(units) => setLocations((l) => ({ ...l, units }))}
+        />
+      </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TRADES } from "@/lib/trades";
 import { stageOptions } from "@/lib/stages";
+import { emptyLocations, type ProjectLocations, type TaskLocation } from "@/lib/locations";
+import LocationFields, { type TaskLocationValue } from "./LocationFields";
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "נמוכה" },
@@ -28,6 +30,7 @@ type TaskValues = {
   dueDate?: string | Date | null;
   stage?: string;
   trade?: string;
+  location?: TaskLocation;
   durationHours?: number;
   dependsOn?: string[];
   checklist?: ChecklistItem[];
@@ -36,9 +39,11 @@ type TaskValues = {
 export default function TaskEditForm({
   task,
   siblingTasks = [],
+  locations = emptyLocations(),
 }: {
   task: TaskValues;
   siblingTasks?: { _id: string; title: string }[];
+  locations?: ProjectLocations;
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(task.title);
@@ -47,6 +52,11 @@ export default function TaskEditForm({
   const [dueDate, setDueDate] = useState(toDateInputValue(task.dueDate));
   const [stage, setStage] = useState(task.stage ?? "");
   const [trade, setTrade] = useState(task.trade ?? "");
+  const [location, setLocation] = useState<TaskLocationValue>({
+    building: task.location?.building ?? "",
+    floor: task.location?.floor ?? "",
+    unit: task.location?.unit ?? "",
+  });
   const [durationHours, setDurationHours] = useState(task.durationHours?.toString() ?? "");
   const [dependsOn, setDependsOn] = useState<string[]>(task.dependsOn ?? []);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist ?? []);
@@ -84,6 +94,7 @@ export default function TaskEditForm({
           dueDate: dueDate || undefined,
           stage: stage || undefined,
           trade: trade || null,
+          location,
           durationHours: durationHours ? Number(durationHours) : undefined,
           dependsOn,
           checklist,
@@ -219,6 +230,8 @@ export default function TaskEditForm({
           </select>
         </div>
       </div>
+
+      <LocationFields options={locations} value={location} onChange={setLocation} />
 
       <div className="flex flex-col gap-2">
         <label className="text-sm text-gray-700">משימות חוסמות (תלות)</label>

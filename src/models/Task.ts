@@ -16,6 +16,13 @@ const taskSchema = new Schema(
     stage: { type: String },
     // Construction trade / discipline (see src/lib/trades.ts).
     trade: { type: String },
+    // Location within the project. Values come from the project's own
+    // buildings/floors/units lists (see Project.locations).
+    location: {
+      building: { type: String },
+      floor: { type: String },
+      unit: { type: String },
+    },
     images: [{ type: String }],
     comments: [
       {

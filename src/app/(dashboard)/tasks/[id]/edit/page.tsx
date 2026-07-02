@@ -60,6 +60,13 @@ export default async function EditTaskPage({
             dueDate: task.dueDate,
             stage: task.stage,
             trade: task.trade,
+            location: task.location
+              ? {
+                  building: task.location.building ?? undefined,
+                  floor: task.location.floor ?? undefined,
+                  unit: task.location.unit ?? undefined,
+                }
+              : undefined,
             durationHours: task.durationHours,
             dependsOn: (task.dependsOn ?? []).map((depId: unknown) => String(depId)),
             checklist: (task.checklist ?? []).map((item: { text: string; done?: boolean }) => ({
@@ -68,6 +75,11 @@ export default async function EditTaskPage({
             })),
           }}
           siblingTasks={siblingTasks.map((t) => ({ _id: String(t._id), title: t.title }))}
+          locations={{
+            buildings: (project.locations?.buildings ?? []).map(String),
+            floors: (project.locations?.floors ?? []).map(String),
+            units: (project.locations?.units ?? []).map(String),
+          }}
         />
       </div>
     </div>

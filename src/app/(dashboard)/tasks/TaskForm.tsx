@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TRADES } from "@/lib/trades";
 import { STAGES } from "@/lib/stages";
+import { emptyLocations, type ProjectLocations } from "@/lib/locations";
+import LocationFields, { EMPTY_LOCATION, type TaskLocationValue } from "./LocationFields";
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "נמוכה" },
@@ -16,9 +18,11 @@ type SequenceItem = { title: string; durationHours: string };
 export default function TaskForm({
   projectId,
   templates = [],
+  locations = emptyLocations(),
 }: {
   projectId: string;
   templates?: { _id: string; name: string }[];
+  locations?: ProjectLocations;
 }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -27,6 +31,7 @@ export default function TaskForm({
   const [dueDate, setDueDate] = useState("");
   const [stage, setStage] = useState("");
   const [trade, setTrade] = useState("");
+  const [location, setLocation] = useState<TaskLocationValue>(EMPTY_LOCATION);
   const [durationHours, setDurationHours] = useState("");
   const [type, setType] = useState<"single" | "sequence">("single");
   const [sequenceItems, setSequenceItems] = useState<SequenceItem[]>([
@@ -99,6 +104,7 @@ export default function TaskForm({
       dueDate: dueDate || undefined,
       stage: stage || undefined,
       trade: trade || undefined,
+      location,
       durationHours: durationHours ? Number(durationHours) : undefined,
       type,
       checklist: checklistItems.map((text) => ({ text, done: false })),
@@ -306,6 +312,8 @@ export default function TaskForm({
           ))}
         </select>
       </div>
+
+      <LocationFields options={locations} value={location} onChange={setLocation} />
 
       {type === "sequence" && (
         <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">

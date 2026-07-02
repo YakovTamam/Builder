@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TRADES, tradeLabel, tradeClassName } from "@/lib/trades";
+import { formatLocation, type TaskLocation } from "@/lib/locations";
 
 const STATUS_COLUMNS = [
   { value: "todo", label: "לביצוע" },
@@ -28,6 +29,7 @@ type TaskItem = {
   dueDate?: string;
   parentTaskId?: string;
   trade?: string;
+  location?: TaskLocation;
 };
 
 type ProjectItem = { _id: string; name: string; startDate?: string };
@@ -46,6 +48,7 @@ export default function TaskBoard({
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [tradeFilter, setTradeFilter] = useState("");
+  const [buildingFilter, setBuildingFilter] = useState("");
 
   const projectId = selectedProjectId ?? projects[0]?._id;
   const selectedProject = projects.find((p) => p._id === projectId);
@@ -56,9 +59,21 @@ export default function TaskBoard({
     return TRADES.filter((t) => present.has(t.value));
   }, [tasks]);
 
+  // Buildings present on this project's tasks.
+  const buildingsInUse = useMemo(() => {
+    const present = new Set<string>();
+    for (const t of tasks) if (t.location?.building) present.add(t.location.building);
+    return [...present].sort();
+  }, [tasks]);
+
   const visibleTasks = useMemo(
-    () => (tradeFilter ? tasks.filter((t) => t.trade === tradeFilter) : tasks),
-    [tasks, tradeFilter],
+    () =>
+      tasks.filter(
+        (t) =>
+          (!tradeFilter || t.trade === tradeFilter) &&
+          (!buildingFilter || t.location?.building === buildingFilter),
+      ),
+    [tasks, tradeFilter, buildingFilter],
   );
 
   const loadTasks = useCallback(async () => {
@@ -147,6 +162,21 @@ export default function TaskBoard({
             ))}
           </select>
         )}
+
+        {buildingsInUse.length > 0 && (
+          <select
+            value={buildingFilter}
+            onChange={(e) => setBuildingFilter(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <option value="">כל הבניינים</option>
+            {buildingsInUse.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {loading ? (
@@ -195,6 +225,7 @@ export default function TaskBoard({
                         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
                           {typeof task.durationHours === "number" && <span>⏱ {task.durationHours} שעות</span>}
                           {task.dueDate && <span>📅 {new Date(task.dueDate).toLocaleDateString("he-IL")}</span>}
+                          {formatLocation(task.location) && <span>📍 {formatLocation(task.location)}</span>}
                         </div>
 
                         <select

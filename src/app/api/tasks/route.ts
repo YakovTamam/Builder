@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import Project from "@/models/Project";
 import Task, { TASK_PRIORITIES, TASK_TYPES } from "@/models/Task";
+import { sanitizeTaskLocation } from "@/lib/locations";
 
 const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
 
@@ -64,6 +65,7 @@ export async function POST(request: Request) {
     dueDate,
     stage,
     trade,
+    location,
     type,
     durationHours,
     sequenceItems,
@@ -76,6 +78,7 @@ export async function POST(request: Request) {
     dueDate?: string;
     stage?: string;
     trade?: string;
+    location?: unknown;
     type?: string;
     durationHours?: number;
     sequenceItems?: { title: string; durationHours?: number }[];
@@ -108,6 +111,7 @@ export async function POST(request: Request) {
     dueDate: dueDate ? new Date(dueDate) : undefined,
     stage,
     trade,
+    location: sanitizeTaskLocation(location),
     type: taskType,
     durationHours,
     checklist: (checklist ?? []).map((item) => ({ text: item.text, done: !!item.done })),
