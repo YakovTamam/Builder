@@ -20,6 +20,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { computeCriticalPath, wouldCreateCycle, type CpmTaskInput } from "@/lib/criticalPath";
+import { TRADES } from "@/lib/trades";
 
 export type GraphTask = {
   _id: string;
@@ -29,6 +30,7 @@ export type GraphTask = {
   durationHours?: number;
   dueDate?: string;
   assignedTo?: string;
+  trade?: string;
   dependsOn?: string[];
   graphPosition?: { x?: number; y?: number };
 };
@@ -574,6 +576,7 @@ function SidePanel({
   const [durationHours, setDurationHours] = useState(task.durationHours?.toString() ?? "");
   const [dueDate, setDueDate] = useState(toDateInput(task.dueDate));
   const [assignedTo, setAssignedTo] = useState(task.assignedTo ?? "");
+  const [trade, setTrade] = useState(task.trade ?? "");
   const [dependsOn, setDependsOn] = useState<string[]>(task.dependsOn ?? []);
   const [addDep, setAddDep] = useState("");
   const [saving, setSaving] = useState(false);
@@ -606,6 +609,7 @@ function SidePanel({
           durationHours: durationHours ? Number(durationHours) : undefined,
           dueDate: dueDate || undefined,
           assignedTo: assignedTo || null,
+          trade: trade || null,
           dependsOn,
         }),
       });
@@ -724,17 +728,30 @@ function SidePanel({
             </label>
           </div>
 
-          <label className="flex flex-col gap-1 text-xs text-gray-600">
-            עובד שטח אחראי
-            <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className={fieldClass}>
-              <option value="">לא משויך</option>
-              {workers.map((w) => (
-                <option key={w._id} value={w._id}>
-                  {w.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label className="flex flex-col gap-1 text-xs text-gray-600">
+              עובד שטח אחראי
+              <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className={fieldClass}>
+                <option value="">לא משויך</option>
+                {workers.map((w) => (
+                  <option key={w._id} value={w._id}>
+                    {w.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-gray-600">
+              מקצוע
+              <select value={trade} onChange={(e) => setTrade(e.target.value)} className={fieldClass}>
+                <option value="">ללא</option>
+                {TRADES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
 
           {/* Dependencies */}
           <div className="flex flex-col gap-1.5">
