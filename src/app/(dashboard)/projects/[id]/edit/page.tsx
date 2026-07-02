@@ -45,6 +45,11 @@ export default async function EditProjectPage({
             startDate: project.startDate,
             dueDate: project.dueDate,
             progress: project.progress,
+            locations: {
+              buildings: (project.locations?.buildings ?? []).map(String),
+              floors: (project.locations?.floors ?? []).map(String),
+              units: (project.locations?.units ?? []).map(String),
+            },
           }}
         />
       </div>

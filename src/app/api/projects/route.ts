@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import Project, { PROJECT_STATUSES } from "@/models/Project";
+import { sanitizeLocations } from "@/lib/locations";
 
 const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
 
@@ -31,13 +32,14 @@ export async function POST(request: Request) {
   await connectToDatabase();
 
   const body = await request.json();
-  const { name, address, status, budget, startDate, dueDate } = body as {
+  const { name, address, status, budget, startDate, dueDate, locations } = body as {
     name?: string;
     address?: string;
     status?: string;
     budget?: number;
     startDate?: string;
     dueDate?: string;
+    locations?: unknown;
   };
 
   if (!name) {
@@ -56,6 +58,7 @@ export async function POST(request: Request) {
     budget,
     startDate: startDate ? new Date(startDate) : undefined,
     dueDate: dueDate ? new Date(dueDate) : undefined,
+    locations: locations !== undefined ? sanitizeLocations(locations) : undefined,
     managerId: session.sub,
     progress: 0,
   });

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import Project, { PROJECT_STATUSES } from "@/models/Project";
+import { sanitizeLocations } from "@/lib/locations";
 
 const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
 
@@ -54,7 +55,7 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { name, address, status, progress, budget, startDate, dueDate } = body as {
+  const { name, address, status, progress, budget, startDate, dueDate, locations } = body as {
     name?: string;
     address?: string;
     status?: string;
@@ -62,6 +63,7 @@ export async function PATCH(
     budget?: number;
     startDate?: string;
     dueDate?: string;
+    locations?: unknown;
   };
 
   if (status && !PROJECT_STATUSES.includes(status as (typeof PROJECT_STATUSES)[number])) {
@@ -75,6 +77,7 @@ export async function PATCH(
   if (budget !== undefined) project.budget = budget;
   if (startDate !== undefined) project.startDate = startDate ? new Date(startDate) : undefined;
   if (dueDate !== undefined) project.dueDate = dueDate ? new Date(dueDate) : undefined;
+  if (locations !== undefined) project.locations = sanitizeLocations(locations);
 
   await project.save();
 

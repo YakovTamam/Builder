@@ -14,6 +14,12 @@ const projectSchema = new Schema(
     dueDate: { type: Date },
     managerId: { type: Schema.Types.ObjectId, ref: "User" },
     coverImage: { type: String },
+    // Location taxonomy for the project; tasks pick from these lists.
+    locations: {
+      buildings: [{ type: String }],
+      floors: [{ type: String }],
+      units: [{ type: String }],
+    },
   },
   { timestamps: true },
 );

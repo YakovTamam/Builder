@@ -47,6 +47,11 @@ export default async function NewTaskPage({
         <TaskForm
           projectId={projectId}
           templates={templates.map((t) => ({ _id: String(t._id), name: t.name }))}
+          locations={{
+            buildings: (project.locations?.buildings ?? []).map(String),
+            floors: (project.locations?.floors ?? []).map(String),
+            units: (project.locations?.units ?? []).map(String),
+          }}
         />
       </div>
     </div>
