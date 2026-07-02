@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import Project from "@/models/Project";
-import Task, { TASK_PRIORITIES, TASK_TYPES } from "@/models/Task";
+import Task, { TASK_PRIORITIES, TASK_STATUSES, TASK_TYPES } from "@/models/Task";
 import { sanitizeTaskLocation } from "@/lib/locations";
 
 const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
@@ -62,6 +62,7 @@ export async function POST(request: Request) {
     title,
     description,
     priority,
+    status,
     dueDate,
     stage,
     trade,
@@ -75,6 +76,7 @@ export async function POST(request: Request) {
     title?: string;
     description?: string;
     priority?: string;
+    status?: string;
     dueDate?: string;
     stage?: string;
     trade?: string;
@@ -98,6 +100,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "עדיפות לא תקינה" }, { status: 400 });
   }
 
+  if (status && !TASK_STATUSES.includes(status as (typeof TASK_STATUSES)[number])) {
+    return NextResponse.json({ error: "סטטוס לא תקין" }, { status: 400 });
+  }
+
   const taskType = (type ?? "single") as (typeof TASK_TYPES)[number];
   if (!TASK_TYPES.includes(taskType)) {
     return NextResponse.json({ error: "סוג משימה לא תקין" }, { status: 400 });
@@ -108,6 +114,7 @@ export async function POST(request: Request) {
     title,
     description,
     priority: priority ?? "medium",
+    status: status ?? "todo",
     dueDate: dueDate ? new Date(dueDate) : undefined,
     stage,
     trade,

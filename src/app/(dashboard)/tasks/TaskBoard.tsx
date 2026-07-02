@@ -49,6 +49,9 @@ export default function TaskBoard({
   const [loading, setLoading] = useState(true);
   const [tradeFilter, setTradeFilter] = useState("");
   const [buildingFilter, setBuildingFilter] = useState("");
+  const [addingColumn, setAddingColumn] = useState<string | null>(null);
+  const [newTitle, setNewTitle] = useState("");
+  const [creating, setCreating] = useState(false);
 
   const projectId = selectedProjectId ?? projects[0]?._id;
   const selectedProject = projects.find((p) => p._id === projectId);
@@ -106,6 +109,28 @@ export default function TaskBoard({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
+  }
+
+  // Quick inline create: title only, in the given column's status. Keeps the
+  // input open and focused so several tasks can be added in a row.
+  async function handleInlineCreate(status: string) {
+    const title = newTitle.trim();
+    if (!title || !projectId) return;
+    setCreating(true);
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, title, status, type: "single" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.task) {
+        setTasks((prev) => [data.task as TaskItem, ...prev]);
+        setNewTitle("");
+      }
+    } finally {
+      setCreating(false);
+    }
   }
 
   return (
@@ -243,9 +268,65 @@ export default function TaskBoard({
                     );
                   })}
 
-                  {columnTasks.length === 0 && (
+                  {columnTasks.length === 0 && addingColumn !== column.value && (
                     <p className="text-xs text-gray-400 text-center py-4">אין משימות</p>
                   )}
+
+                  {canManage &&
+                    (addingColumn === column.value ? (
+                      <div className="flex flex-col gap-1.5">
+                        <input
+                          autoFocus
+                          type="text"
+                          value={newTitle}
+                          onChange={(e) => setNewTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleInlineCreate(column.value);
+                            } else if (e.key === "Escape") {
+                              setAddingColumn(null);
+                              setNewTitle("");
+                            }
+                          }}
+                          placeholder="כותרת המשימה..."
+                          disabled={creating}
+                          className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
+                        />
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleInlineCreate(column.value)}
+                            disabled={creating || !newTitle.trim()}
+                            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-3 py-1 text-xs font-medium disabled:opacity-50"
+                          >
+                            הוסף
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAddingColumn(null);
+                              setNewTitle("");
+                            }}
+                            className="text-xs text-gray-500 hover:text-gray-700"
+                          >
+                            סגור
+                          </button>
+                          <span className="text-[11px] text-gray-400">Enter להוספה מהירה</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAddingColumn(column.value);
+                          setNewTitle("");
+                        }}
+                        className="rounded-lg border border-dashed border-gray-300 px-2.5 py-1.5 text-xs text-gray-500 hover:border-emerald-400 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                      >
+                        ＋ הוסף משימה
+                      </button>
+                    ))}
                 </div>
               </div>
             );
