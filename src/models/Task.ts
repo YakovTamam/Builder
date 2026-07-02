@@ -14,6 +14,8 @@ const taskSchema = new Schema(
     assignedTo: { type: Schema.Types.ObjectId, ref: "User" },
     dueDate: { type: Date },
     stage: { type: String },
+    // Construction trade / discipline (see src/lib/trades.ts).
+    trade: { type: String },
     images: [{ type: String }],
     comments: [
       {

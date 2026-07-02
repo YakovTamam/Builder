@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { TRADES } from "@/lib/trades";
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "נמוכה" },
@@ -24,6 +25,7 @@ export default function TaskForm({
   const [priority, setPriority] = useState("medium");
   const [dueDate, setDueDate] = useState("");
   const [stage, setStage] = useState("");
+  const [trade, setTrade] = useState("");
   const [durationHours, setDurationHours] = useState("");
   const [type, setType] = useState<"single" | "sequence">("single");
   const [sequenceItems, setSequenceItems] = useState<SequenceItem[]>([
@@ -95,6 +97,7 @@ export default function TaskForm({
       priority,
       dueDate: dueDate || undefined,
       stage: stage || undefined,
+      trade: trade || undefined,
       durationHours: durationHours ? Number(durationHours) : undefined,
       type,
       checklist: checklistItems.map((text) => ({ text, done: false })),
@@ -276,6 +279,25 @@ export default function TaskForm({
             className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1 sm:max-w-[calc(50%-0.5rem)]">
+        <label htmlFor="trade" className="text-sm text-gray-700">
+          מקצוע
+        </label>
+        <select
+          id="trade"
+          value={trade}
+          onChange={(e) => setTrade(e.target.value)}
+          className="rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        >
+          <option value="">ללא</option>
+          {TRADES.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {type === "sequence" && (

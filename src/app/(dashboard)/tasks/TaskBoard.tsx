@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { TRADES, tradeLabel, tradeClassName } from "@/lib/trades";
 
 const STATUS_COLUMNS = [
   { value: "todo", label: "לביצוע" },
@@ -26,6 +27,7 @@ type TaskItem = {
   durationHours?: number;
   dueDate?: string;
   parentTaskId?: string;
+  trade?: string;
 };
 
 type ProjectItem = { _id: string; name: string; startDate?: string };
@@ -43,9 +45,21 @@ export default function TaskBoard({
   const searchParams = useSearchParams();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tradeFilter, setTradeFilter] = useState("");
 
   const projectId = selectedProjectId ?? projects[0]?._id;
   const selectedProject = projects.find((p) => p._id === projectId);
+
+  // Only offer trades that actually appear in this project's tasks.
+  const tradesInUse = useMemo(() => {
+    const present = new Set(tasks.map((t) => t.trade).filter(Boolean));
+    return TRADES.filter((t) => present.has(t.value));
+  }, [tasks]);
+
+  const visibleTasks = useMemo(
+    () => (tradeFilter ? tasks.filter((t) => t.trade === tradeFilter) : tasks),
+    [tasks, tradeFilter],
+  );
 
   const loadTasks = useCallback(async () => {
     if (!projectId) return;
@@ -111,19 +125,36 @@ export default function TaskBoard({
         </div>
       )}
 
-      <Link
-        href={`/critical-path?projectId=${projectId}`}
-        className="self-start rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-100 transition-colors"
-      >
-        🔗 פתח מפת ענף (נתיב קריטי)
-      </Link>
+      <div className="flex flex-wrap items-center gap-2">
+        <Link
+          href={`/critical-path?projectId=${projectId}`}
+          className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-100 transition-colors"
+        >
+          🔗 פתח מפת ענף (נתיב קריטי)
+        </Link>
+
+        {tradesInUse.length > 0 && (
+          <select
+            value={tradeFilter}
+            onChange={(e) => setTradeFilter(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <option value="">כל המקצועות</option>
+            {tradesInUse.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       {loading ? (
         <p className="text-gray-500 text-sm">טוען משימות...</p>
       ) : (
         <div className="font-project-tasks grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {STATUS_COLUMNS.map((column) => {
-            const columnTasks = tasks.filter((t) => t.status === column.value);
+            const columnTasks = visibleTasks.filter((t) => t.status === column.value);
             return (
               <div key={column.value} className="rounded-xl border border-gray-200 bg-white p-3 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
@@ -152,6 +183,11 @@ export default function TaskBoard({
                           {task.parentTaskId && (
                             <span className="rounded-full px-2 py-0.5 bg-gray-100 text-gray-700">
                               חלק מרצף
+                            </span>
+                          )}
+                          {task.trade && (
+                            <span className={`rounded-full px-2 py-0.5 ${tradeClassName(task.trade)}`}>
+                              {tradeLabel(task.trade)}
                             </span>
                           )}
                         </div>

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
 import { getAccessibleTask, MANAGE_ROLES } from "@/lib/access";
+import { tradeLabel, tradeClassName } from "@/lib/trades";
 import Task from "@/models/Task";
 import TaskCollaborator from "@/models/TaskCollaborator";
 import ActivityLog from "@/models/ActivityLog";
@@ -90,6 +91,11 @@ export default async function TaskDetailPage({
         <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${priority.className}`}>
           עדיפות {priority.label}
         </span>
+        {task.trade && (
+          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${tradeClassName(task.trade)}`}>
+            {tradeLabel(task.trade)}
+          </span>
+        )}
         {task.type === "sequence" && (
           <span className="rounded-full px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700">
             משימה יוצרת רצף
