@@ -52,6 +52,9 @@ export default function TaskBoard({
   const [addingColumn, setAddingColumn] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
+  const [showPaste, setShowPaste] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [pasting, setPasting] = useState(false);
 
   const projectId = selectedProjectId ?? projects[0]?._id;
   const selectedProject = projects.find((p) => p._id === projectId);
@@ -133,6 +136,32 @@ export default function TaskBoard({
     }
   }
 
+  const pastedTitles = pasteText
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  // Bulk create: one task per non-empty pasted line, all as "todo".
+  async function handlePasteCreate() {
+    if (pastedTitles.length === 0 || !projectId) return;
+    setPasting(true);
+    try {
+      const res = await fetch("/api/tasks/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, titles: pastedTitles, status: "todo" }),
+      });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.tasks)) {
+        setTasks((prev) => [...(data.tasks as TaskItem[]), ...prev]);
+        setPasteText("");
+        setShowPaste(false);
+      }
+    } finally {
+      setPasting(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -149,12 +178,21 @@ export default function TaskBoard({
         </select>
 
         {canManage && (
-          <Link
-            href={`/tasks/new?projectId=${projectId}`}
-            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium text-center"
-          >
-            + משימה חדשה
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowPaste(true)}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-100 transition-colors"
+            >
+              📋 הדבקת רשימה
+            </button>
+            <Link
+              href={`/tasks/new?projectId=${projectId}`}
+              className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium text-center"
+            >
+              + משימה חדשה
+            </Link>
+          </div>
         )}
       </div>
 
@@ -331,6 +369,49 @@ export default function TaskBoard({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {showPaste && canManage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setShowPaste(false)}
+        >
+          <div
+            className="flex w-full max-w-md flex-col gap-3 rounded-xl bg-white p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-gray-900">הדבקת רשימת משימות</h3>
+              <button
+                type="button"
+                onClick={() => setShowPaste(false)}
+                className="text-gray-400 hover:text-gray-700 text-lg leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <p className="text-xs text-gray-500">כל שורה תיצור משימה נפרדת (בעמודת &quot;לביצוע&quot;).</p>
+            <textarea
+              autoFocus
+              rows={8}
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder={"יציקת יסודות\nזיון עמודים\nטיח פנים\n..."}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">{pastedTitles.length} משימות יווצרו</span>
+              <button
+                type="button"
+                onClick={handlePasteCreate}
+                disabled={pasting || pastedTitles.length === 0}
+                className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50"
+              >
+                {pasting ? "יוצר..." : `צור ${pastedTitles.length} משימות`}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
