@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TRADES } from "@/lib/trades";
+import { stageOptions } from "@/lib/stages";
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "נמוכה" },
@@ -184,13 +185,19 @@ export default function TaskEditForm({
           <label htmlFor="stage" className="text-sm text-gray-700">
             שלב
           </label>
-          <input
+          <select
             id="stage"
-            type="text"
             value={stage}
             onChange={(e) => setStage(e.target.value)}
-            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <option value="">ללא</option>
+            {stageOptions(task.stage).map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="flex flex-col gap-1">
