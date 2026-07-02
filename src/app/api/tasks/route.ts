@@ -63,6 +63,7 @@ export async function POST(request: Request) {
     priority,
     dueDate,
     stage,
+    trade,
     type,
     durationHours,
     sequenceItems,
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
     priority?: string;
     dueDate?: string;
     stage?: string;
+    trade?: string;
     type?: string;
     durationHours?: number;
     sequenceItems?: { title: string; durationHours?: number }[];
@@ -105,6 +107,7 @@ export async function POST(request: Request) {
     priority: priority ?? "medium",
     dueDate: dueDate ? new Date(dueDate) : undefined,
     stage,
+    trade,
     type: taskType,
     durationHours,
     checklist: (checklist ?? []).map((item) => ({ text: item.text, done: !!item.done })),

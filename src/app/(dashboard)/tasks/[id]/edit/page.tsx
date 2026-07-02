@@ -59,6 +59,7 @@ export default async function EditTaskPage({
             priority: task.priority ?? "medium",
             dueDate: task.dueDate,
             stage: task.stage,
+            trade: task.trade,
             durationHours: task.durationHours,
             dependsOn: (task.dependsOn ?? []).map((depId: unknown) => String(depId)),
             checklist: (task.checklist ?? []).map((item: { text: string; done?: boolean }) => ({

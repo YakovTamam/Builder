@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { TRADES } from "@/lib/trades";
 
 const PRIORITY_OPTIONS = [
   { value: "low", label: "נמוכה" },
@@ -25,6 +26,7 @@ type TaskValues = {
   priority: string;
   dueDate?: string | Date | null;
   stage?: string;
+  trade?: string;
   durationHours?: number;
   dependsOn?: string[];
   checklist?: ChecklistItem[];
@@ -43,6 +45,7 @@ export default function TaskEditForm({
   const [priority, setPriority] = useState(task.priority);
   const [dueDate, setDueDate] = useState(toDateInputValue(task.dueDate));
   const [stage, setStage] = useState(task.stage ?? "");
+  const [trade, setTrade] = useState(task.trade ?? "");
   const [durationHours, setDurationHours] = useState(task.durationHours?.toString() ?? "");
   const [dependsOn, setDependsOn] = useState<string[]>(task.dependsOn ?? []);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist ?? []);
@@ -79,6 +82,7 @@ export default function TaskEditForm({
           priority,
           dueDate: dueDate || undefined,
           stage: stage || undefined,
+          trade: trade || null,
           durationHours: durationHours ? Number(durationHours) : undefined,
           dependsOn,
           checklist,
@@ -187,6 +191,25 @@ export default function TaskEditForm({
             onChange={(e) => setStage(e.target.value)}
             className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="trade" className="text-sm text-gray-700">
+            מקצוע
+          </label>
+          <select
+            id="trade"
+            value={trade}
+            onChange={(e) => setTrade(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <option value="">ללא</option>
+            {TRADES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
