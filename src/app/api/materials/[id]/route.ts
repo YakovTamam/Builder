@@ -32,13 +32,14 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { name, quantity, unit, supplier, status, expectedDate, notes } = body as {
+  const { name, quantity, unit, supplier, status, expectedDate, taskId, notes } = body as {
     name?: string;
     quantity?: number;
     unit?: string;
     supplier?: string;
     status?: string;
     expectedDate?: string;
+    taskId?: string | null;
     notes?: string;
   };
 
@@ -58,6 +59,7 @@ export async function PATCH(
   if (unit !== undefined) material.unit = unit;
   if (supplier !== undefined) material.supplier = supplier;
   if (expectedDate !== undefined) material.expectedDate = expectedDate ? new Date(expectedDate) : undefined;
+  if (taskId !== undefined) material.taskId = taskId || undefined;
   if (notes !== undefined) material.notes = notes;
 
   await material.save();

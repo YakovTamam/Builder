@@ -11,6 +11,9 @@ const materialSchema = new Schema(
     supplier: { type: String },
     status: { type: String, enum: MATERIAL_STATUSES, default: "ordered" },
     expectedDate: { type: Date },
+    // The task this material is needed for. When the material is late/missing,
+    // that task is effectively blocked.
+    taskId: { type: Schema.Types.ObjectId, ref: "Task" },
     notes: { type: String },
   },
   { timestamps: true },
