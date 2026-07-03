@@ -39,6 +39,10 @@ export type GraphTask = {
 
 type Worker = { _id: string; name: string };
 
+// Describes a "grow from this node" request: create a new task that is
+// either a predecessor of (blocks) or a successor of (continues) taskId.
+type AddRelation = { taskId: string; mode: "predecessor" | "successor" };
+
 const STATUS_OPTIONS = [
   { value: "todo", label: "לביצוע" },
   { value: "in_progress", label: "בתהליך" },
@@ -93,6 +97,8 @@ type TaskNodeData = {
   showCard: boolean;
   selected: boolean;
   onEdit: () => void;
+  onAddSuccessor?: () => void;
+  onAddPredecessor?: () => void;
 };
 
 type TaskFlowNode = Node<TaskNodeData, "taskNode">;
@@ -158,6 +164,36 @@ function TaskNode({ data }: NodeProps<TaskFlowNode>) {
           >
             עריכה ⟵
           </button>
+          {(data.onAddPredecessor || data.onAddSuccessor) && (
+            <div className="mt-1.5 flex gap-1.5">
+              {data.onAddPredecessor && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    data.onAddPredecessor!();
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 px-2 py-1 text-[11px] hover:bg-gray-100"
+                  title="הוסף משימה שקודמת לזו"
+                >
+                  ＋ קודמת
+                </button>
+              )}
+              {data.onAddSuccessor && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    data.onAddSuccessor!();
+                  }}
+                  className="flex-1 rounded-lg border border-gray-300 px-2 py-1 text-[11px] hover:bg-gray-100"
+                  title="הוסף משימת המשך (ענף)"
+                >
+                  ＋ המשך
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -212,9 +248,44 @@ export default function TaskGraph({
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [workers, setWorkers] = useState<Worker[]>([]);
-  const [showAdd, setShowAdd] = useState(false);
-  const [fullscreen, setFullscreen] = useState(false);
+  const [addDialog, setAddDialog] = useState<{ relation?: AddRelation } | null>(null);
+  // "auto": positions always follow the computed tree layout, dragging is
+  // disabled. "manual": dragging is enabled and positions persist per-task.
+  const [layoutMode, setLayoutMode] = useState<"auto" | "manual">("auto");
+  const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
+  const [cssFullscreen, setCssFullscreen] = useState(false);
+  const fullscreen = isNativeFullscreen || cssFullscreen;
   const rfRef = useRef<ReactFlowInstance<TaskFlowNode, Edge> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sync with the real Fullscreen API (handles the browser's own Esc-to-exit).
+  useEffect(() => {
+    function handleChange() {
+      setIsNativeFullscreen(document.fullscreenElement === containerRef.current);
+    }
+    document.addEventListener("fullscreenchange", handleChange);
+    return () => document.removeEventListener("fullscreenchange", handleChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (document.fullscreenElement === el) {
+      document.exitFullscreen();
+      return;
+    }
+    if (cssFullscreen) {
+      setCssFullscreen(false);
+      return;
+    }
+    if (el.requestFullscreen) {
+      el.requestFullscreen().catch(() => setCssFullscreen(true));
+    } else {
+      // iOS Safari and older browsers don't support the Fullscreen API on
+      // arbitrary elements; fall back to a full-viewport overlay.
+      setCssFullscreen(true);
+    }
+  }, [cssFullscreen]);
 
   useEffect(() => {
     if (!canManage) return;
@@ -239,17 +310,22 @@ export default function TaskGraph({
   }, [tasks, projectStartDate]);
 
   // Tree layout: the critical path is a horizontal trunk (y = 0), and every
-  // other task branches above/below its depth column. Manual drag positions
-  // (graphPosition) still win.
+  // other task branches above/below its depth column. In "manual" mode, a
+  // saved graphPosition wins; in "auto" mode the tree layout always applies.
   const baseNodes = useMemo<TaskFlowNode[]>(() => {
     const depths = computeDepths(tasks);
     const criticalSet = new Set(cpm.criticalTaskIds);
     const offByDepth = new Map<number, number>();
     return tasks.map((t) => {
       const r = cpm.tasks[t._id];
+      const hasSavedPosition =
+        layoutMode === "manual" &&
+        !!t.graphPosition &&
+        typeof t.graphPosition.x === "number" &&
+        typeof t.graphPosition.y === "number";
       let position: { x: number; y: number };
-      if (t.graphPosition && typeof t.graphPosition.x === "number" && typeof t.graphPosition.y === "number") {
-        position = { x: t.graphPosition.x, y: t.graphPosition.y };
+      if (hasSavedPosition) {
+        position = { x: t.graphPosition!.x!, y: t.graphPosition!.y! };
       } else {
         const depth = depths.get(t._id) ?? 0;
         const x = depth * COL_WIDTH;
@@ -280,10 +356,16 @@ export default function TaskGraph({
           showCard: false,
           selected: false,
           onEdit: () => setSelectedId(t._id),
+          onAddPredecessor: canManage
+            ? () => setAddDialog({ relation: { taskId: t._id, mode: "predecessor" } })
+            : undefined,
+          onAddSuccessor: canManage
+            ? () => setAddDialog({ relation: { taskId: t._id, mode: "successor" } })
+            : undefined,
         },
       };
     });
-  }, [tasks, cpm, workerName]);
+  }, [tasks, cpm, workerName, layoutMode, canManage]);
 
   const baseEdges = useMemo<Edge[]>(() => {
     const criticalSet = new Set(cpm.criticalTaskIds);
@@ -405,7 +487,9 @@ export default function TaskGraph({
     [tasks, persist, onReload],
   );
 
-  const handleAutoArrange = useCallback(async () => {
+  // Clears every task's saved manual position (used to start over in manual
+  // mode) and refits the view.
+  const handleResetPositions = useCallback(async () => {
     setError(null);
     await Promise.all(tasks.map((t) => persist(t._id, { graphPosition: null })));
     onReload();
@@ -478,18 +562,45 @@ export default function TaskGraph({
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => setShowAdd(true)}
+            onClick={() => setAddDialog({})}
             className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-3 py-1.5 text-sm font-medium"
           >
             + הוסף משימה
           </button>
-          <button
-            type="button"
-            onClick={handleAutoArrange}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-100 transition-colors"
-          >
-            סידור אוטומטי
-          </button>
+
+          <div className="inline-flex rounded-lg border border-gray-300 bg-white p-0.5 text-sm">
+            <button
+              type="button"
+              onClick={() => setLayoutMode("auto")}
+              title="הצמתים ננעלים לפריסת העץ; גרירה מושבתת"
+              className={`rounded-md px-2.5 py-1 transition-colors ${
+                layoutMode === "auto" ? "bg-emerald-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              פריסה אוטומטית
+            </button>
+            <button
+              type="button"
+              onClick={() => setLayoutMode("manual")}
+              title="גרירה חופשית; המיקום נשמר לכל משימה"
+              className={`rounded-md px-2.5 py-1 transition-colors ${
+                layoutMode === "manual" ? "bg-emerald-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              סידור ידני
+            </button>
+          </div>
+
+          {layoutMode === "manual" && (
+            <button
+              type="button"
+              onClick={handleResetPositions}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-100 transition-colors"
+            >
+              איפוס מיקומים שמורים
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => rfRef.current?.fitView({ padding: 0.2, duration: 400 })}
@@ -511,11 +622,8 @@ export default function TaskGraph({
 
       {/* Canvas + side panel */}
       <div
-        className={
-          fullscreen
-            ? "fixed inset-0 z-50 bg-gray-50"
-            : "relative h-[72vh] rounded-xl border border-gray-200 bg-gray-50"
-        }
+        ref={containerRef}
+        className={`relative bg-gray-50 ${fullscreen ? "h-screen w-screen" : "h-[72vh] rounded-xl border border-gray-200"}`}
         dir="ltr"
       >
         <ReactFlow
@@ -526,7 +634,7 @@ export default function TaskGraph({
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          onNodeDragStop={canManage ? onNodeDragStop : undefined}
+          onNodeDragStop={canManage && layoutMode === "manual" ? onNodeDragStop : undefined}
           onConnect={canManage ? onConnect : undefined}
           onEdgesDelete={canManage ? onEdgesDelete : undefined}
           onNodeClick={(_, node) => setActiveCardId(node.id)}
@@ -535,7 +643,7 @@ export default function TaskGraph({
           onPaneClick={() => setActiveCardId(null)}
           nodeTypes={nodeTypes}
           nodesConnectable={canManage}
-          nodesDraggable={canManage}
+          nodesDraggable={canManage && layoutMode === "manual"}
           elementsSelectable
           fitView
           proOptions={{ hideAttribution: true }}
@@ -545,7 +653,7 @@ export default function TaskGraph({
           <Panel position="top-right">
             <button
               type="button"
-              onClick={() => setFullscreen((v) => !v)}
+              onClick={toggleFullscreen}
               className="rounded-lg border border-gray-300 bg-white/95 px-2.5 py-1.5 text-sm shadow-sm hover:bg-gray-100"
               title={fullscreen ? "יציאה ממסך מלא" : "מסך מלא"}
             >
@@ -583,13 +691,14 @@ export default function TaskGraph({
         )}
       </div>
 
-      {showAdd && canManage && (
+      {addDialog && canManage && (
         <AddTaskDialog
           projectId={projectId}
           tasks={tasks}
-          onClose={() => setShowAdd(false)}
+          relation={addDialog.relation}
+          onClose={() => setAddDialog(null)}
           onCreated={() => {
-            setShowAdd(false);
+            setAddDialog(null);
             onReload();
           }}
           onError={setError}
@@ -908,12 +1017,14 @@ function SidePanel({
 function AddTaskDialog({
   projectId,
   tasks,
+  relation,
   onClose,
   onCreated,
   onError,
 }: {
   projectId: string;
   tasks: GraphTask[];
+  relation?: AddRelation;
   onClose: () => void;
   onCreated: () => void;
   onError: (msg: string | null) => void;
@@ -922,6 +1033,8 @@ function AddTaskDialog({
   const [durationHours, setDurationHours] = useState("");
   const [predecessor, setPredecessor] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const relatedTitle = relation ? tasks.find((t) => t._id === relation.taskId)?.title : undefined;
 
   const fieldClass =
     "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500";
@@ -947,9 +1060,24 @@ function AddTaskDialog({
         onError(data.error ?? "שגיאה ביצירת המשימה");
         return;
       }
-      // Link a prerequisite if one was chosen.
-      if (predecessor && data.task?._id) {
-        await fetch(`/api/tasks/${data.task._id}`, {
+      const newTaskId = data.task?._id;
+      if (newTaskId && relation?.mode === "successor") {
+        // New task continues the origin: it depends on it.
+        await fetch(`/api/tasks/${newTaskId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dependsOn: [relation.taskId] }),
+        });
+      } else if (newTaskId && relation?.mode === "predecessor") {
+        // New task blocks the origin: the origin now depends on it too.
+        const origin = tasks.find((t) => t._id === relation.taskId);
+        await fetch(`/api/tasks/${relation.taskId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dependsOn: [...(origin?.dependsOn ?? []), newTaskId] }),
+        });
+      } else if (newTaskId && !relation && predecessor) {
+        await fetch(`/api/tasks/${newTaskId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ dependsOn: [predecessor] }),
@@ -976,6 +1104,20 @@ function AddTaskDialog({
           </button>
         </div>
 
+        {relation && relatedTitle && (
+          <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
+            {relation.mode === "successor" ? (
+              <>
+                המשימה החדשה תתווסף כ<b>המשך</b> של &quot;{relatedTitle}&quot;
+              </>
+            ) : (
+              <>
+                המשימה החדשה תתווסף כ<b>קודמת</b> ל-&quot;{relatedTitle}&quot;
+              </>
+            )}
+          </div>
+        )}
+
         <label className="flex flex-col gap-1 text-xs text-gray-600">
           כותרת
           <input value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus className={fieldClass} />
@@ -990,17 +1132,19 @@ function AddTaskDialog({
             className={fieldClass}
           />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-gray-600">
-          משימה קודמת (אופציונלי)
-          <select value={predecessor} onChange={(e) => setPredecessor(e.target.value)} className={fieldClass}>
-            <option value="">ללא</option>
-            {tasks.map((t) => (
-              <option key={t._id} value={t._id}>
-                {t.title}
-              </option>
-            ))}
-          </select>
-        </label>
+        {!relation && (
+          <label className="flex flex-col gap-1 text-xs text-gray-600">
+            משימה קודמת (אופציונלי)
+            <select value={predecessor} onChange={(e) => setPredecessor(e.target.value)} className={fieldClass}>
+              <option value="">ללא</option>
+              {tasks.map((t) => (
+                <option key={t._id} value={t._id}>
+                  {t.title}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <button
           type="submit"
