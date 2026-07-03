@@ -17,6 +17,9 @@ const alertSchema = new Schema(
     title: { type: String, required: true },
     description: { type: String },
     isRead: { type: Boolean, default: false },
+    // Free-form context used for de-duplication and auto-resolution,
+    // e.g. { materialId } or { taskId }.
+    metadata: { type: Schema.Types.Mixed },
   },
   { timestamps: true },
 );
