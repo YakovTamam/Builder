@@ -679,6 +679,8 @@ export default function TaskGraph({
           projectId={projectId}
           tasks={tasks}
           relation={addDialog.relation}
+          criticalChain={summary.criticalChain.map((id) => ({ taskId: id, title: titleById.get(id) ?? "" }))}
+          criticalTaskIds={new Set(cpm.criticalTaskIds)}
           onClose={() => setAddDialog(null)}
           onCreated={() => {
             setAddDialog(null);
@@ -1001,6 +1003,8 @@ function AddTaskDialog({
   projectId,
   tasks,
   relation,
+  criticalChain,
+  criticalTaskIds,
   onClose,
   onCreated,
   onError,
@@ -1008,6 +1012,8 @@ function AddTaskDialog({
   projectId: string;
   tasks: GraphTask[];
   relation?: AddRelation;
+  criticalChain: { taskId: string; title: string }[];
+  criticalTaskIds: Set<string>;
   onClose: () => void;
   onCreated: () => void;
   onError: (msg: string | null) => void;
@@ -1015,6 +1021,10 @@ function AddTaskDialog({
   const [title, setTitle] = useState("");
   const [durationHours, setDurationHours] = useState("");
   const [predecessor, setPredecessor] = useState("");
+  // "branch": a regular single dependency (existing behavior). "critical":
+  // the task is spliced directly into the critical-path trunk.
+  const [insertMode, setInsertMode] = useState<"branch" | "critical">("branch");
+  const [trunkAfter, setTrunkAfter] = useState(() => criticalChain[criticalChain.length - 1]?.taskId ?? "");
   const [busy, setBusy] = useState(false);
 
   const relatedTitle = relation ? tasks.find((t) => t._id === relation.taskId)?.title : undefined;
@@ -1025,6 +1035,7 @@ function AddTaskDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
+    if (insertMode === "critical" && !trunkAfter) return;
     setBusy(true);
     onError(null);
     try {
@@ -1044,7 +1055,29 @@ function AddTaskDialog({
         return;
       }
       const newTaskId = data.task?._id;
-      if (newTaskId && relation?.mode === "successor") {
+
+      if (newTaskId && insertMode === "critical" && trunkAfter) {
+        // Splice the new task into the trunk right after `trunkAfter` (X):
+        // the new task depends on X, and X's direct *critical* successors
+        // (its place in the trunk) depend on the new task instead. Any
+        // non-critical side branch that also depends on X is left as-is.
+        await fetch(`/api/tasks/${newTaskId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dependsOn: [trunkAfter] }),
+        });
+        const trunkSuccessors = tasks.filter(
+          (t) => t._id !== newTaskId && criticalTaskIds.has(t._id) && (t.dependsOn ?? []).includes(trunkAfter),
+        );
+        for (const successor of trunkSuccessors) {
+          const nextDeps = (successor.dependsOn ?? []).map((d) => (d === trunkAfter ? newTaskId : d));
+          await fetch(`/api/tasks/${successor._id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ dependsOn: nextDeps }),
+          });
+        }
+      } else if (newTaskId && relation?.mode === "successor") {
         // New task continues the origin: it depends on it.
         await fetch(`/api/tasks/${newTaskId}`, {
           method: "PATCH",
@@ -1087,18 +1120,60 @@ function AddTaskDialog({
           </button>
         </div>
 
-        {relation && relatedTitle && (
-          <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
-            {relation.mode === "successor" ? (
-              <>
-                המשימה החדשה תתווסף כ<b>המשך</b> של &quot;{relatedTitle}&quot;
-              </>
-            ) : (
-              <>
-                המשימה החדשה תתווסף כ<b>קודמת</b> ל-&quot;{relatedTitle}&quot;
-              </>
-            )}
+        {criticalChain.length > 0 && (
+          <div className="inline-flex self-start rounded-lg border border-gray-300 bg-white p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setInsertMode("branch")}
+              className={`rounded-md px-2.5 py-1 transition-colors ${
+                insertMode === "branch" ? "bg-emerald-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              ענף
+            </button>
+            <button
+              type="button"
+              onClick={() => setInsertMode("critical")}
+              className={`rounded-md px-2.5 py-1 transition-colors ${
+                insertMode === "critical" ? "bg-red-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              נתיב קריטי
+            </button>
           </div>
+        )}
+
+        {insertMode === "critical" ? (
+          <div className="flex flex-col gap-1.5">
+            <label className="flex flex-col gap-1 text-xs text-gray-600">
+              הוסף לנתיב הקריטי אחרי
+              <select value={trunkAfter} onChange={(e) => setTrunkAfter(e.target.value)} className={fieldClass}>
+                {criticalChain.map((t) => (
+                  <option key={t.taskId} value={t.taskId}>
+                    {t.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="text-[11px] text-gray-500">
+              המשימה תיכנס ישירות לתוך הנתיב הקריטי, מיד אחרי המשימה שנבחרה.
+            </p>
+          </div>
+        ) : (
+          relation &&
+          relatedTitle && (
+            <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600">
+              {relation.mode === "successor" ? (
+                <>
+                  המשימה החדשה תתווסף כ<b>המשך</b> של &quot;{relatedTitle}&quot;
+                </>
+              ) : (
+                <>
+                  המשימה החדשה תתווסף כ<b>קודמת</b> ל-&quot;{relatedTitle}&quot;
+                </>
+              )}
+            </div>
+          )
         )}
 
         <label className="flex flex-col gap-1 text-xs text-gray-600">
@@ -1115,7 +1190,7 @@ function AddTaskDialog({
             className={fieldClass}
           />
         </label>
-        {!relation && (
+        {insertMode === "branch" && !relation && (
           <label className="flex flex-col gap-1 text-xs text-gray-600">
             משימה קודמת (אופציונלי)
             <select value={predecessor} onChange={(e) => setPredecessor(e.target.value)} className={fieldClass}>
@@ -1131,7 +1206,7 @@ function AddTaskDialog({
 
         <button
           type="submit"
-          disabled={busy || !title.trim()}
+          disabled={busy || !title.trim() || (insertMode === "critical" && !trunkAfter)}
           className="mt-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50"
         >
           {busy ? "יוצר..." : "צור משימה"}
