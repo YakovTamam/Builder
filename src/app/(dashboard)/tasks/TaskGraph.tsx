@@ -6,6 +6,7 @@ import {
   ReactFlow,
   Background,
   Controls,
+  MiniMap,
   Panel,
   Handle,
   Position,
@@ -17,9 +18,11 @@ import {
   type NodeProps,
   type Connection,
   type ReactFlowInstance,
+  type OnSelectionChangeParams,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { computeCriticalPath, wouldCreateCycle, type CpmTaskInput } from "@/lib/criticalPath";
+import { computeDagreLayout } from "@/lib/graphLayout";
 import { TRADES, tradeLabel } from "@/lib/trades";
 import { formatLocation, type TaskLocation } from "@/lib/locations";
 
@@ -62,9 +65,6 @@ const STATUS_STYLES: Record<string, { bar: string; dot: string; label: string }>
   review: { bar: "#f59e0b", dot: "bg-amber-500", label: "לבדיקה" },
   done: { bar: "#10b981", dot: "bg-emerald-500", label: "הושלם" },
 };
-
-const COL_WIDTH = 240;
-const ROW_HEIGHT = 96;
 
 function toDateInput(iso?: string) {
   if (!iso) return "";
@@ -203,28 +203,6 @@ function TaskNode({ data }: NodeProps<TaskFlowNode>) {
 const nodeTypes = { taskNode: TaskNode };
 
 // ---------------------------------------------------------------------------
-// Layout helpers
-// ---------------------------------------------------------------------------
-
-function computeDepths(tasks: GraphTask[]): Map<string, number> {
-  const byId = new Map(tasks.map((t) => [t._id, t]));
-  const depth = new Map<string, number>();
-  const visiting = new Set<string>();
-  function resolve(id: string): number {
-    if (depth.has(id)) return depth.get(id)!;
-    if (visiting.has(id)) return 0;
-    visiting.add(id);
-    const preds = (byId.get(id)?.dependsOn ?? []).filter((p) => byId.has(p));
-    const d = preds.length === 0 ? 0 : Math.max(...preds.map(resolve)) + 1;
-    visiting.delete(id);
-    depth.set(id, d);
-    return d;
-  }
-  for (const t of tasks) resolve(t._id);
-  return depth;
-}
-
-// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -249,9 +227,9 @@ export default function TaskGraph({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [addDialog, setAddDialog] = useState<{ relation?: AddRelation } | null>(null);
-  // "auto": positions always follow the computed tree layout, dragging is
-  // disabled. "manual": dragging is enabled and positions persist per-task.
-  const [layoutMode, setLayoutMode] = useState<"auto" | "manual">("auto");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const rfRef = useRef<ReactFlowInstance<TaskFlowNode, Edge> | null>(null);
 
@@ -289,34 +267,53 @@ export default function TaskGraph({
     return computeCriticalPath(inputs, projectStartDate ? new Date(projectStartDate) : null);
   }, [tasks, projectStartDate]);
 
-  // Tree layout: the critical path is a horizontal trunk (y = 0), and every
-  // other task branches above/below its depth column. In "manual" mode, a
-  // saved graphPosition wins; in "auto" mode the tree layout always applies.
+  // Edges used for layout purposes: the real dependsOn edges, plus a
+  // synthetic edge attaching every otherwise-disconnected task to the trunk
+  // root so dagre lays out the whole project as one connected graph (and so
+  // the root -> orphan line still renders).
+  const layoutEdges = useMemo(() => {
+    const idSet = new Set(tasks.map((t) => t._id));
+    const connected = new Set<string>();
+    const real: { source: string; target: string }[] = [];
+    for (const t of tasks) {
+      for (const prereq of t.dependsOn ?? []) {
+        if (!idSet.has(prereq)) continue;
+        connected.add(t._id);
+        connected.add(prereq);
+        real.push({ source: prereq, target: t._id });
+      }
+    }
+    const root = [...cpm.criticalTaskIds].sort(
+      (a, b) => (cpm.tasks[a]?.earliestStartHours ?? 0) - (cpm.tasks[b]?.earliestStartHours ?? 0),
+    )[0];
+    const synthetic: { source: string; target: string }[] = [];
+    if (root) {
+      for (const t of tasks) {
+        if (t._id !== root && !connected.has(t._id)) {
+          synthetic.push({ source: root, target: t._id });
+        }
+      }
+    }
+    return { real, synthetic };
+  }, [tasks, cpm]);
+
+  // Auto-layout via dagre, positioning every node relative to its actual
+  // parent (unlike a column-based heuristic, a branch-of-a-branch still
+  // renders near what it's really connected to). A saved graphPosition
+  // (from a manual drag) always wins over the computed position.
+  const dagrePositions = useMemo(
+    () => computeDagreLayout(tasks.map((t) => t._id), [...layoutEdges.real, ...layoutEdges.synthetic]),
+    [tasks, layoutEdges],
+  );
+
   const baseNodes = useMemo<TaskFlowNode[]>(() => {
-    const depths = computeDepths(tasks);
-    const criticalSet = new Set(cpm.criticalTaskIds);
-    const offByDepth = new Map<number, number>();
     return tasks.map((t) => {
       const r = cpm.tasks[t._id];
       const hasSavedPosition =
-        layoutMode === "manual" &&
-        !!t.graphPosition &&
-        typeof t.graphPosition.x === "number" &&
-        typeof t.graphPosition.y === "number";
-      let position: { x: number; y: number };
-      if (hasSavedPosition) {
-        position = { x: t.graphPosition!.x!, y: t.graphPosition!.y! };
-      } else {
-        const depth = depths.get(t._id) ?? 0;
-        const x = depth * COL_WIDTH;
-        let y = 0;
-        if (!criticalSet.has(t._id)) {
-          const k = (offByDepth.get(depth) ?? 0) + 1;
-          offByDepth.set(depth, k);
-          y = (k % 2 === 1 ? -1 : 1) * Math.ceil(k / 2) * ROW_HEIGHT;
-        }
-        position = { x, y };
-      }
+        !!t.graphPosition && typeof t.graphPosition.x === "number" && typeof t.graphPosition.y === "number";
+      const position = hasSavedPosition
+        ? { x: t.graphPosition!.x!, y: t.graphPosition!.y! }
+        : (dagrePositions.get(t._id) ?? { x: 0, y: 0 });
       return {
         id: t._id,
         type: "taskNode" as const,
@@ -345,52 +342,35 @@ export default function TaskGraph({
         },
       };
     });
-  }, [tasks, cpm, workerName, layoutMode, canManage]);
+  }, [tasks, cpm, workerName, dagrePositions, canManage]);
 
   const baseEdges = useMemo<Edge[]>(() => {
     const criticalSet = new Set(cpm.criticalTaskIds);
-    const idSet = new Set(tasks.map((t) => t._id));
-    const connected = new Set<string>();
-    const result: Edge[] = [];
-    for (const t of tasks) {
-      for (const prereq of t.dependsOn ?? []) {
-        if (!idSet.has(prereq)) continue;
-        connected.add(t._id);
-        connected.add(prereq);
-        // Trunk (both endpoints critical) is red; every other branch is black.
-        const critical = criticalSet.has(t._id) && criticalSet.has(prereq);
-        result.push({
-          id: `${prereq}->${t._id}`,
-          source: prereq,
-          target: t._id,
-          markerEnd: { type: MarkerType.ArrowClosed, color: critical ? "#ef4444" : "#111827" },
-          style: { stroke: critical ? "#ef4444" : "#111827", strokeWidth: critical ? 3 : 1.75 },
-          animated: critical,
-        });
-      }
-    }
-    // Attach orphan tasks (no dependencies at all) to the trunk root so the
-    // whole graph reads as a single connected tree. These are visual only.
-    const root = [...cpm.criticalTaskIds].sort(
-      (a, b) => (cpm.tasks[a]?.earliestStartHours ?? 0) - (cpm.tasks[b]?.earliestStartHours ?? 0),
-    )[0];
-    if (root) {
-      for (const t of tasks) {
-        if (t._id !== root && !connected.has(t._id)) {
-          result.push({
-            id: `syn-${t._id}`,
-            source: root,
-            target: t._id,
-            deletable: false,
-            selectable: false,
-            markerEnd: { type: MarkerType.ArrowClosed, color: "#111827" },
-            style: { stroke: "#111827", strokeWidth: 1.25, strokeDasharray: "4 3" },
-          });
-        }
-      }
+    const result: Edge[] = layoutEdges.real.map(({ source, target }) => {
+      // Trunk (both endpoints critical) is red; every other branch is black.
+      const critical = criticalSet.has(source) && criticalSet.has(target);
+      return {
+        id: `${source}->${target}`,
+        source,
+        target,
+        markerEnd: { type: MarkerType.ArrowClosed, color: critical ? "#ef4444" : "#111827" },
+        style: { stroke: critical ? "#ef4444" : "#111827", strokeWidth: critical ? 3 : 1.75 },
+        animated: critical,
+      };
+    });
+    for (const { source, target } of layoutEdges.synthetic) {
+      result.push({
+        id: `syn-${target}`,
+        source,
+        target,
+        deletable: false,
+        selectable: false,
+        markerEnd: { type: MarkerType.ArrowClosed, color: "#111827" },
+        style: { stroke: "#111827", strokeWidth: 1.25, strokeDasharray: "4 3" },
+      });
     }
     return result;
-  }, [tasks, cpm]);
+  }, [layoutEdges, cpm]);
 
   useEffect(() => {
     setNodes(baseNodes);
@@ -423,11 +403,37 @@ export default function TaskGraph({
   }, []);
 
   const onNodeDragStop = useCallback(
-    (_: unknown, node: Node) => {
-      persist(node.id, { graphPosition: { x: Math.round(node.position.x), y: Math.round(node.position.y) } });
+    (_: unknown, _node: Node, draggedNodes: Node[]) => {
+      // draggedNodes covers every node that moved together (a multi-selection
+      // drag), not just the one the pointer was on.
+      for (const node of draggedNodes) {
+        persist(node.id, { graphPosition: { x: Math.round(node.position.x), y: Math.round(node.position.y) } });
+      }
     },
     [persist],
   );
+
+  const onSelectionChange = useCallback(({ nodes: selected }: OnSelectionChangeParams) => {
+    setSelectedIds(selected.map((n) => n.id));
+  }, []);
+
+  const handleBulkDelete = useCallback(async () => {
+    setBulkDeleting(true);
+    setError(null);
+    try {
+      const results = await Promise.all(
+        selectedIds.map((id) => fetch(`/api/tasks/${id}`, { method: "DELETE" })),
+      );
+      if (results.some((r) => !r.ok)) {
+        setError("חלק מהמשימות לא נמחקו - ייתכן שאין הרשאה");
+      }
+      setSelectedIds([]);
+      setConfirmBulkDelete(false);
+      onReload();
+    } finally {
+      setBulkDeleting(false);
+    }
+  }, [selectedIds, onReload]);
 
   const onConnect = useCallback(
     async (connection: Connection) => {
@@ -467,8 +473,8 @@ export default function TaskGraph({
     [tasks, persist, onReload],
   );
 
-  // Clears every task's saved manual position (used to start over in manual
-  // mode) and refits the view.
+  // Clears every task's saved (dragged) position, so the graph falls back
+  // to the computed dagre layout again, and refits the view.
   const handleResetPositions = useCallback(async () => {
     setError(null);
     await Promise.all(tasks.map((t) => persist(t._id, { graphPosition: null })));
@@ -548,38 +554,14 @@ export default function TaskGraph({
             + הוסף משימה
           </button>
 
-          <div className="inline-flex rounded-lg border border-gray-300 bg-white p-0.5 text-sm">
-            <button
-              type="button"
-              onClick={() => setLayoutMode("auto")}
-              title="הצמתים ננעלים לפריסת העץ; גרירה מושבתת"
-              className={`rounded-md px-2.5 py-1 transition-colors ${
-                layoutMode === "auto" ? "bg-emerald-600 text-white" : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              פריסה אוטומטית
-            </button>
-            <button
-              type="button"
-              onClick={() => setLayoutMode("manual")}
-              title="גרירה חופשית; המיקום נשמר לכל משימה"
-              className={`rounded-md px-2.5 py-1 transition-colors ${
-                layoutMode === "manual" ? "bg-emerald-600 text-white" : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              סידור ידני
-            </button>
-          </div>
-
-          {layoutMode === "manual" && (
-            <button
-              type="button"
-              onClick={handleResetPositions}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-100 transition-colors"
-            >
-              איפוס מיקומים שמורים
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleResetPositions}
+            title="מחזיר כל משימה שגררת ידנית לפריסה המחושבת"
+            className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-100 transition-colors"
+          >
+            סדר מחדש
+          </button>
 
           <button
             type="button"
@@ -617,22 +599,29 @@ export default function TaskGraph({
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          onNodeDragStop={canManage && layoutMode === "manual" ? onNodeDragStop : undefined}
+          onNodeDragStop={canManage ? onNodeDragStop : undefined}
           onConnect={canManage ? onConnect : undefined}
           onEdgesDelete={canManage ? onEdgesDelete : undefined}
+          onSelectionChange={canManage ? onSelectionChange : undefined}
           onNodeClick={(_, node) => setActiveCardId(node.id)}
           onNodeMouseEnter={(_, node) => setActiveCardId(node.id)}
           onNodeMouseLeave={() => setActiveCardId(null)}
           onPaneClick={() => setActiveCardId(null)}
           nodeTypes={nodeTypes}
           nodesConnectable={canManage}
-          nodesDraggable={canManage && layoutMode === "manual"}
+          nodesDraggable={canManage}
           elementsSelectable
           fitView
           proOptions={{ hideAttribution: true }}
         >
           <Background />
           <Controls />
+          <MiniMap
+            pannable
+            zoomable
+            nodeColor={(n) => ((n as TaskFlowNode).data.isCritical ? "#ef4444" : "#cbd5e1")}
+            maskColor="rgba(240, 240, 240, 0.6)"
+          />
           <Panel position="top-right">
             <button
               type="button"
@@ -653,9 +642,46 @@ export default function TaskGraph({
                 <span className="h-1 w-6 rounded bg-gray-900" />
                 <span className="text-gray-700">ענף רגיל</span>
               </div>
-              <p className="text-gray-400">ריחוף/לחיצה על נקודה מציג פרטים</p>
+              <p className="text-gray-400">ריחוף/לחיצה מציג פרטים · Shift+גרירה לבחירה מרובה</p>
             </div>
           </Panel>
+          {canManage && selectedIds.length > 1 && (
+            <Panel position="bottom-center">
+              <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white/95 p-2 shadow-sm" dir="rtl">
+                {confirmBulkDelete ? (
+                  <>
+                    <span className="text-xs text-red-700">למחוק {selectedIds.length} משימות נבחרות?</span>
+                    <button
+                      type="button"
+                      onClick={handleBulkDelete}
+                      disabled={bulkDeleting}
+                      className="rounded-lg bg-red-600 px-2.5 py-1 text-xs font-medium text-white disabled:opacity-50"
+                    >
+                      {bulkDeleting ? "מוחק..." : "כן, מחק"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmBulkDelete(false)}
+                      className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs hover:bg-gray-100"
+                    >
+                      ביטול
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs text-gray-600">{selectedIds.length} משימות נבחרות</span>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmBulkDelete(true)}
+                      className="rounded-lg border border-red-300 px-2.5 py-1 text-xs text-red-600 hover:bg-red-50"
+                    >
+                      מחק נבחרות
+                    </button>
+                  </>
+                )}
+              </div>
+            </Panel>
+          )}
         </ReactFlow>
 
         {selectedTask && (
