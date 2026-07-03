@@ -252,40 +252,20 @@ export default function TaskGraph({
   // "auto": positions always follow the computed tree layout, dragging is
   // disabled. "manual": dragging is enabled and positions persist per-task.
   const [layoutMode, setLayoutMode] = useState<"auto" | "manual">("auto");
-  const [isNativeFullscreen, setIsNativeFullscreen] = useState(false);
-  const [cssFullscreen, setCssFullscreen] = useState(false);
-  const fullscreen = isNativeFullscreen || cssFullscreen;
+  const [fullscreen, setFullscreen] = useState(false);
   const rfRef = useRef<ReactFlowInstance<TaskFlowNode, Edge> | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Sync with the real Fullscreen API (handles the browser's own Esc-to-exit).
+  // Freeze the page behind the fullscreen overlay so it can't be scrolled
+  // (this is what made the earlier version feel "bigger than the screen" —
+  // the background page was still scrollable under the fixed canvas).
   useEffect(() => {
-    function handleChange() {
-      setIsNativeFullscreen(document.fullscreenElement === containerRef.current);
-    }
-    document.addEventListener("fullscreenchange", handleChange);
-    return () => document.removeEventListener("fullscreenchange", handleChange);
-  }, []);
-
-  const toggleFullscreen = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    if (document.fullscreenElement === el) {
-      document.exitFullscreen();
-      return;
-    }
-    if (cssFullscreen) {
-      setCssFullscreen(false);
-      return;
-    }
-    if (el.requestFullscreen) {
-      el.requestFullscreen().catch(() => setCssFullscreen(true));
-    } else {
-      // iOS Safari and older browsers don't support the Fullscreen API on
-      // arbitrary elements; fall back to a full-viewport overlay.
-      setCssFullscreen(true);
-    }
-  }, [cssFullscreen]);
+    if (!fullscreen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [fullscreen]);
 
   useEffect(() => {
     if (!canManage) return;
@@ -622,8 +602,11 @@ export default function TaskGraph({
 
       {/* Canvas + side panel */}
       <div
-        ref={containerRef}
-        className={`relative bg-gray-50 ${fullscreen ? "h-screen w-screen" : "h-[72vh] rounded-xl border border-gray-200"}`}
+        className={
+          fullscreen
+            ? "fixed inset-0 z-50 bg-gray-50"
+            : "relative h-[72vh] rounded-xl border border-gray-200 bg-gray-50"
+        }
         dir="ltr"
       >
         <ReactFlow
@@ -653,7 +636,7 @@ export default function TaskGraph({
           <Panel position="top-right">
             <button
               type="button"
-              onClick={toggleFullscreen}
+              onClick={() => setFullscreen((v) => !v)}
               className="rounded-lg border border-gray-300 bg-white/95 px-2.5 py-1.5 text-sm shadow-sm hover:bg-gray-100"
               title={fullscreen ? "יציאה ממסך מלא" : "מסך מלא"}
             >
