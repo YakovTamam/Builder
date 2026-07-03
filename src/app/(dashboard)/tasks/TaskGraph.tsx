@@ -231,6 +231,7 @@ export default function TaskGraph({
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [showMinimap, setShowMinimap] = useState(false);
   const rfRef = useRef<ReactFlowInstance<TaskFlowNode, Edge> | null>(null);
 
   // Freeze the page behind the fullscreen overlay so it can't be scrolled
@@ -616,21 +617,37 @@ export default function TaskGraph({
         >
           <Background />
           <Controls />
-          <MiniMap
-            pannable
-            zoomable
-            nodeColor={(n) => ((n as TaskFlowNode).data.isCritical ? "#ef4444" : "#cbd5e1")}
-            maskColor="rgba(240, 240, 240, 0.6)"
-          />
+          {showMinimap && (
+            <MiniMap
+              pannable
+              zoomable
+              nodeColor={(n) => ((n as TaskFlowNode).data.isCritical ? "#ef4444" : "#cbd5e1")}
+              maskColor="rgba(240, 240, 240, 0.6)"
+            />
+          )}
           <Panel position="top-right">
-            <button
-              type="button"
-              onClick={() => setFullscreen((v) => !v)}
-              className="rounded-lg border border-gray-300 bg-white/95 px-2.5 py-1.5 text-sm shadow-sm hover:bg-gray-100"
-              title={fullscreen ? "יציאה ממסך מלא" : "מסך מלא"}
-            >
-              {fullscreen ? "✕ יציאה" : "⛶ מסך מלא"}
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setShowMinimap((v) => !v)}
+                className={
+                  showMinimap
+                    ? "rounded-lg border border-gray-400 bg-gray-100 px-2.5 py-1.5 text-sm shadow-sm hover:bg-gray-200"
+                    : "rounded-lg border border-gray-300 bg-white/95 px-2.5 py-1.5 text-sm shadow-sm hover:bg-gray-100"
+                }
+                title={showMinimap ? "הסתר מפה ממוזערת" : "הצג מפה ממוזערת"}
+              >
+                🗺️ מפה
+              </button>
+              <button
+                type="button"
+                onClick={() => setFullscreen((v) => !v)}
+                className="rounded-lg border border-gray-300 bg-white/95 px-2.5 py-1.5 text-sm shadow-sm hover:bg-gray-100"
+                title={fullscreen ? "יציאה ממסך מלא" : "מסך מלא"}
+              >
+                {fullscreen ? "✕ יציאה" : "⛶ מסך מלא"}
+              </button>
+            </div>
           </Panel>
           <Panel position="top-left">
             <div className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white/95 p-3 text-xs shadow-sm" dir="rtl">
