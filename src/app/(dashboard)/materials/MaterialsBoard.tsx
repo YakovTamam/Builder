@@ -21,8 +21,18 @@ type MaterialItem = {
   supplier?: string;
   status: string;
   expectedDate?: string;
+  taskId?: string;
   notes?: string;
 };
+
+// A material blocks work when it hasn't arrived by its expected date, or is
+// explicitly marked missing.
+function isMaterialLate(m: { status: string; expectedDate?: string }) {
+  if (m.status === "arrived") return false;
+  if (m.status === "missing") return true;
+  if (!m.expectedDate) return false;
+  return new Date(m.expectedDate).getTime() < Date.now();
+}
 
 export default function MaterialsBoard({
   projects,
@@ -36,6 +46,7 @@ export default function MaterialsBoard({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
+  const [tasks, setTasks] = useState<{ _id: string; title: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
@@ -43,18 +54,27 @@ export default function MaterialsBoard({
   const [unit, setUnit] = useState("");
   const [supplier, setSupplier] = useState("");
   const [expectedDate, setExpectedDate] = useState("");
+  const [taskId, setTaskId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const projectId = selectedProjectId ?? projects[0]?._id;
+  const taskTitle = (id?: string) => (id ? tasks.find((t) => t._id === id)?.title : undefined);
 
   const loadMaterials = useCallback(async () => {
     if (!projectId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/materials?projectId=${projectId}`);
-      const data = await res.json();
-      setMaterials(data.materials ?? []);
+      const [matRes, taskRes] = await Promise.all([
+        fetch(`/api/materials?projectId=${projectId}`),
+        fetch(`/api/tasks?projectId=${projectId}`),
+      ]);
+      const matData = await matRes.json();
+      setMaterials(matData.materials ?? []);
+      if (taskRes.ok) {
+        const taskData = await taskRes.json();
+        setTasks((taskData.tasks ?? []).map((t: { _id: string; title: string }) => ({ _id: t._id, title: t.title })));
+      }
     } finally {
       setLoading(false);
     }
@@ -100,6 +120,7 @@ export default function MaterialsBoard({
           unit: unit || undefined,
           supplier: supplier || undefined,
           expectedDate: expectedDate || undefined,
+          taskId: taskId || undefined,
         }),
       });
       const data = await res.json();
@@ -113,6 +134,7 @@ export default function MaterialsBoard({
       setUnit("");
       setSupplier("");
       setExpectedDate("");
+      setTaskId("");
       setShowForm(false);
     } finally {
       setSubmitting(false);
@@ -145,7 +167,7 @@ export default function MaterialsBoard({
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+        <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
           <div className="flex flex-col gap-1">
             <label className="text-sm text-gray-700">שם החומר</label>
             <input
@@ -192,13 +214,28 @@ export default function MaterialsBoard({
               className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-gray-700">נדרש למשימה</label>
+            <select
+              value={taskId}
+              onChange={(e) => setTaskId(e.target.value)}
+              className="rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="">ללא</option>
+              {tasks.map((t) => (
+                <option key={t._id} value={t._id}>
+                  {t.title}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          {error && <p className="text-sm text-red-600 sm:col-span-2 lg:col-span-5">{error}</p>}
+          {error && <p className="text-sm text-red-600 sm:col-span-2 lg:col-span-6">{error}</p>}
 
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50 sm:col-span-2 lg:col-span-5"
+            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50 sm:col-span-2 lg:col-span-6"
           >
             {submitting ? "מוסיף..." : "הוסף חומר"}
           </button>
@@ -218,7 +255,14 @@ export default function MaterialsBoard({
             return (
               <div key={material._id} className="rounded-xl border border-gray-200 bg-white p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
                 <div className="flex flex-col gap-1">
-                  <p className="font-medium">{material.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{material.name}</p>
+                    {isMaterialLate(material) && (
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                        ⚠ מאחר / חוסם
+                      </span>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
                     <span>
                       {material.quantity} {material.unit ?? ""}
@@ -227,6 +271,7 @@ export default function MaterialsBoard({
                     {material.expectedDate && (
                       <span>צפוי: {new Date(material.expectedDate).toLocaleDateString("he-IL")}</span>
                     )}
+                    {taskTitle(material.taskId) && <span>למשימה: {taskTitle(material.taskId)}</span>}
                   </div>
                 </div>
 

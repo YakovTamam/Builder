@@ -8,6 +8,7 @@ import { formatLocation } from "@/lib/locations";
 import Task from "@/models/Task";
 import TaskCollaborator from "@/models/TaskCollaborator";
 import ActivityLog from "@/models/ActivityLog";
+import Material from "@/models/Material";
 import TaskStatusSelect from "./TaskStatusSelect";
 import DeleteTaskButton from "./DeleteTaskButton";
 import TaskComments from "./TaskComments";
@@ -27,6 +28,14 @@ const STATUS_LABELS: Record<string, string> = {
   in_progress: "בתהליך",
   review: "לבדיקה",
   done: "הושלם",
+};
+
+const MATERIAL_STATUS_LABELS: Record<string, string> = {
+  ordered: "הוזמן",
+  in_transit: "בדרך",
+  arrived: "הגיע",
+  missing: "חסר",
+  issue: "בעיה",
 };
 
 export const dynamic = "force-dynamic";
@@ -76,6 +85,16 @@ export default async function TaskDetailPage({
     ? await Task.find({ _id: { $in: task.dependsOn } }).select("title status").lean()
     : [];
   const isBlocked = dependencies.some((dep) => dep.status !== "done");
+
+  const linkedMaterials = await Material.find({ taskId: id })
+    .select("name status quantity unit expectedDate")
+    .sort({ createdAt: -1 })
+    .lean();
+  const nowMs = new Date().getTime();
+  const materialLate = (m: { status?: string; expectedDate?: Date }) =>
+    m.status !== "arrived" &&
+    (m.status === "missing" || (!!m.expectedDate && new Date(m.expectedDate).getTime() < nowMs));
+  const blockingMaterials = linkedMaterials.filter(materialLate);
 
   return (
     <div className="font-project-tasks flex flex-col gap-6 max-w-2xl">
@@ -134,6 +153,38 @@ export default async function TaskDetailPage({
                   <span>{dep.title}</span>
                   <span className="text-xs text-gray-500">{STATUS_LABELS[dep.status ?? "todo"]}</span>
                 </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {linkedMaterials.length > 0 && (
+        <div
+          className={`rounded-xl border p-4 ${
+            blockingMaterials.length > 0 ? "border-red-200 bg-red-50" : "border-gray-200 bg-white"
+          }`}
+        >
+          <h2 className="text-sm font-medium text-gray-500 mb-2">
+            {blockingMaterials.length > 0 ? "⚠️ ממתינה לחומרים" : "חומרים למשימה"}
+          </h2>
+          <ul className="flex flex-col gap-1.5">
+            {linkedMaterials.map((m) => (
+              <li
+                key={String(m._id)}
+                className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
+              >
+                <span>
+                  {m.name}
+                  <span className="text-xs text-gray-500">
+                    {" · "}
+                    {m.quantity} {m.unit ?? ""}
+                  </span>
+                </span>
+                <span className={`text-xs ${materialLate(m) ? "font-medium text-red-600" : "text-gray-500"}`}>
+                  {MATERIAL_STATUS_LABELS[m.status ?? "ordered"] ?? m.status}
+                  {materialLate(m) ? " · מאחר" : ""}
+                </span>
               </li>
             ))}
           </ul>
