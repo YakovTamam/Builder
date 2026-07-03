@@ -20,7 +20,8 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { computeCriticalPath, wouldCreateCycle, type CpmTaskInput } from "@/lib/criticalPath";
-import { TRADES } from "@/lib/trades";
+import { TRADES, tradeLabel } from "@/lib/trades";
+import { formatLocation, type TaskLocation } from "@/lib/locations";
 
 export type GraphTask = {
   _id: string;
@@ -31,6 +32,7 @@ export type GraphTask = {
   dueDate?: string;
   assignedTo?: string;
   trade?: string;
+  location?: TaskLocation;
   dependsOn?: string[];
   graphPosition?: { x?: number; y?: number };
 };
@@ -57,13 +59,19 @@ const STATUS_STYLES: Record<string, { bar: string; dot: string; label: string }>
   done: { bar: "#10b981", dot: "bg-emerald-500", label: "הושלם" },
 };
 
-const COL_WIDTH = 230;
-const ROW_HEIGHT = 84;
+const COL_WIDTH = 240;
+const ROW_HEIGHT = 96;
 
 function toDateInput(iso?: string) {
   if (!iso) return "";
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+}
+
+function shortDate(iso?: string) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit" });
 }
 
 // ---------------------------------------------------------------------------
@@ -76,42 +84,82 @@ type TaskNodeData = {
   priority: string;
   durationHours?: number;
   assigneeName?: string;
+  tradeName?: string;
+  locationText?: string;
   isCritical: boolean;
   floatHours: number;
   startDate?: string;
   finishDate?: string;
-  dimmed: boolean;
+  showCard: boolean;
   selected: boolean;
+  onEdit: () => void;
 };
 
 type TaskFlowNode = Node<TaskNodeData, "taskNode">;
 
-// Minimalist "point" node: a status-colored dot + title. Critical tasks are
-// ringed red. All the details live in the click-to-open side panel.
+// A task is a "point". Hovering (desktop) or tapping (mobile) reveals a small
+// info card; its "עריכה" button opens the full editor drawer.
 function TaskNode({ data }: NodeProps<TaskFlowNode>) {
   const status = STATUS_STYLES[data.status] ?? STATUS_STYLES.todo;
+  const start = shortDate(data.startDate);
+  const finish = shortDate(data.finishDate);
+  const hasDuration = typeof data.durationHours === "number" && data.durationHours > 0;
+
   return (
-    <div
-      className={`flex items-center gap-2 rounded-full bg-white py-1.5 pl-3 pr-2.5 transition-all ${
-        data.isCritical ? "border-2 border-red-500" : "border border-gray-300"
-      } ${data.selected ? "ring-2 ring-emerald-500 ring-offset-1" : "shadow-sm"}`}
-      style={{ maxWidth: 210, opacity: data.dimmed ? 0.28 : 1 }}
-      dir="rtl"
-    >
-      <Handle type="target" position={Position.Left} className="!h-2.5 !w-2.5 !bg-gray-400" />
+    <div className="relative flex flex-col items-center" dir="rtl">
+      <Handle type="target" position={Position.Left} className="!h-2 !w-2 !bg-gray-400" />
       <span
-        className="h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-white"
-        style={{ background: data.isCritical ? "#ef4444" : status.bar }}
-        title={status.label}
+        className={`h-5 w-5 rounded-full transition-all ${data.selected ? "ring-2 ring-emerald-500 ring-offset-1" : ""}`}
+        style={{
+          background: data.isCritical ? "#ef4444" : status.bar,
+          boxShadow: data.isCritical ? "0 0 0 3px #fecaca" : "0 0 0 2px #fff, 0 1px 4px rgba(0,0,0,.25)",
+        }}
       />
-      <div className="min-w-0 leading-tight">
-        <p className="truncate text-xs font-semibold text-gray-900">{data.label}</p>
-        <p className="truncate text-[10px] text-gray-500">
-          {data.isCritical ? "קריטי" : status.label}
-          {typeof data.durationHours === "number" && data.durationHours > 0 ? ` · ${data.durationHours}ש׳` : ""}
-        </p>
-      </div>
-      <Handle type="source" position={Position.Right} className="!h-2.5 !w-2.5 !bg-gray-400" />
+      <span className="mt-1 max-w-[130px] truncate rounded bg-white/85 px-1 text-[11px] font-semibold text-gray-900">
+        {data.label}
+      </span>
+      <Handle type="source" position={Position.Right} className="!h-2 !w-2 !bg-gray-400" />
+
+      {data.showCard && (
+        <div className="absolute bottom-full left-1/2 z-20 mb-2 w-52 -translate-x-1/2 rounded-xl border border-gray-200 bg-white p-3 shadow-xl">
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate text-sm font-semibold text-gray-900">{data.label}</span>
+            {data.isCritical ? (
+              <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                קריטי
+              </span>
+            ) : (
+              data.floatHours > 0 && (
+                <span className="shrink-0 text-[10px] text-gray-400">שהות {Math.round(data.floatHours)}ש׳</span>
+              )
+            )}
+          </div>
+          <div className="mt-1 flex flex-col gap-0.5 text-[11px] text-gray-500">
+            <span>
+              {status.label}
+              {data.tradeName ? ` · ${data.tradeName}` : ""}
+            </span>
+            {(hasDuration || (start && finish)) && (
+              <span>
+                {hasDuration ? `⏱ ${data.durationHours}ש׳` : ""}
+                {start && finish ? `${hasDuration ? " · " : ""}📅 ${start}–${finish}` : ""}
+              </span>
+            )}
+            {data.assigneeName && <span>👤 {data.assigneeName}</span>}
+            {data.locationText && <span>📍 {data.locationText}</span>}
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onEdit();
+            }}
+            className="mt-2 w-full rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-2 py-1 text-xs font-medium"
+          >
+            עריכה ⟵
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -140,37 +188,6 @@ function computeDepths(tasks: GraphTask[]): Map<string, number> {
   return depth;
 }
 
-// All tasks connected to `id` through the dependency chain (both directions).
-function connectedChain(tasks: GraphTask[], id: string): Set<string> {
-  const preds = new Map<string, string[]>();
-  const succs = new Map<string, string[]>();
-  const idSet = new Set(tasks.map((t) => t._id));
-  for (const t of tasks) {
-    preds.set(t._id, (t.dependsOn ?? []).filter((p) => idSet.has(p)));
-    for (const p of t.dependsOn ?? []) {
-      if (!idSet.has(p)) continue;
-      if (!succs.has(p)) succs.set(p, []);
-      succs.get(p)!.push(t._id);
-    }
-  }
-  const chain = new Set<string>([id]);
-  const walk = (start: string, map: Map<string, string[]>) => {
-    const stack = [start];
-    while (stack.length) {
-      const cur = stack.pop()!;
-      for (const next of map.get(cur) ?? []) {
-        if (!chain.has(next)) {
-          chain.add(next);
-          stack.push(next);
-        }
-      }
-    }
-  };
-  walk(id, preds);
-  walk(id, succs);
-  return chain;
-}
-
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
@@ -192,10 +209,11 @@ export default function TaskGraph({
   const [nodes, setNodes, onNodesChange] = useNodesState<TaskFlowNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [error, setError] = useState<string | null>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const rfRef = useRef<ReactFlowInstance<TaskFlowNode, Edge> | null>(null);
 
   useEffect(() => {
@@ -220,9 +238,13 @@ export default function TaskGraph({
     return computeCriticalPath(inputs, projectStartDate ? new Date(projectStartDate) : null);
   }, [tasks, projectStartDate]);
 
+  // Tree layout: the critical path is a horizontal trunk (y = 0), and every
+  // other task branches above/below its depth column. Manual drag positions
+  // (graphPosition) still win.
   const baseNodes = useMemo<TaskFlowNode[]>(() => {
     const depths = computeDepths(tasks);
-    const rowByDepth = new Map<number, number>();
+    const criticalSet = new Set(cpm.criticalTaskIds);
+    const offByDepth = new Map<number, number>();
     return tasks.map((t) => {
       const r = cpm.tasks[t._id];
       let position: { x: number; y: number };
@@ -230,9 +252,14 @@ export default function TaskGraph({
         position = { x: t.graphPosition.x, y: t.graphPosition.y };
       } else {
         const depth = depths.get(t._id) ?? 0;
-        const row = rowByDepth.get(depth) ?? 0;
-        rowByDepth.set(depth, row + 1);
-        position = { x: depth * COL_WIDTH, y: row * ROW_HEIGHT };
+        const x = depth * COL_WIDTH;
+        let y = 0;
+        if (!criticalSet.has(t._id)) {
+          const k = (offByDepth.get(depth) ?? 0) + 1;
+          offByDepth.set(depth, k);
+          y = (k % 2 === 1 ? -1 : 1) * Math.ceil(k / 2) * ROW_HEIGHT;
+        }
+        position = { x, y };
       }
       return {
         id: t._id,
@@ -244,12 +271,15 @@ export default function TaskGraph({
           priority: t.priority,
           durationHours: t.durationHours,
           assigneeName: workerName(t.assignedTo),
+          tradeName: tradeLabel(t.trade),
+          locationText: formatLocation(t.location),
           isCritical: r?.isCritical ?? false,
           floatHours: r?.floatHours ?? 0,
           startDate: r?.startDate ? r.startDate.toISOString() : undefined,
           finishDate: r?.finishDate ? r.finishDate.toISOString() : undefined,
-          dimmed: false,
+          showCard: false,
           selected: false,
+          onEdit: () => setSelectedId(t._id),
         },
       };
     });
@@ -258,19 +288,43 @@ export default function TaskGraph({
   const baseEdges = useMemo<Edge[]>(() => {
     const criticalSet = new Set(cpm.criticalTaskIds);
     const idSet = new Set(tasks.map((t) => t._id));
+    const connected = new Set<string>();
     const result: Edge[] = [];
     for (const t of tasks) {
       for (const prereq of t.dependsOn ?? []) {
         if (!idSet.has(prereq)) continue;
+        connected.add(t._id);
+        connected.add(prereq);
+        // Trunk (both endpoints critical) is red; every other branch is black.
         const critical = criticalSet.has(t._id) && criticalSet.has(prereq);
         result.push({
           id: `${prereq}->${t._id}`,
           source: prereq,
           target: t._id,
-          markerEnd: { type: MarkerType.ArrowClosed, color: critical ? "#ef4444" : "#94a3b8" },
-          style: { stroke: critical ? "#ef4444" : "#94a3b8", strokeWidth: critical ? 2.5 : 1.5 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: critical ? "#ef4444" : "#111827" },
+          style: { stroke: critical ? "#ef4444" : "#111827", strokeWidth: critical ? 3 : 1.75 },
           animated: critical,
         });
+      }
+    }
+    // Attach orphan tasks (no dependencies at all) to the trunk root so the
+    // whole graph reads as a single connected tree. These are visual only.
+    const root = [...cpm.criticalTaskIds].sort(
+      (a, b) => (cpm.tasks[a]?.earliestStartHours ?? 0) - (cpm.tasks[b]?.earliestStartHours ?? 0),
+    )[0];
+    if (root) {
+      for (const t of tasks) {
+        if (t._id !== root && !connected.has(t._id)) {
+          result.push({
+            id: `syn-${t._id}`,
+            source: root,
+            target: t._id,
+            deletable: false,
+            selectable: false,
+            markerEnd: { type: MarkerType.ArrowClosed, color: "#111827" },
+            style: { stroke: "#111827", strokeWidth: 1.25, strokeDasharray: "4 3" },
+          });
+        }
       }
     }
     return result;
@@ -281,32 +335,15 @@ export default function TaskGraph({
     setEdges(baseEdges);
   }, [baseNodes, baseEdges, setNodes, setEdges]);
 
-  // Apply hover/selection highlight without touching the base position state.
-  const highlightSet = useMemo(
-    () => (hoveredId ? connectedChain(tasks, hoveredId) : null),
-    [hoveredId, tasks],
-  );
-
+  // Inject per-node interaction flags without touching base position state.
   const displayNodes = useMemo<TaskFlowNode[]>(
     () =>
       nodes.map((n) => ({
         ...n,
-        data: {
-          ...n.data,
-          dimmed: highlightSet ? !highlightSet.has(n.id) : false,
-          selected: n.id === selectedId,
-        },
+        data: { ...n.data, showCard: n.id === activeCardId, selected: n.id === selectedId },
       })),
-    [nodes, highlightSet, selectedId],
+    [nodes, activeCardId, selectedId],
   );
-
-  const displayEdges = useMemo<Edge[]>(() => {
-    if (!highlightSet) return edges;
-    return edges.map((e) => {
-      const inChain = highlightSet.has(e.source) && highlightSet.has(e.target);
-      return { ...e, style: { ...e.style, opacity: inChain ? 1 : 0.15 } };
-    });
-  }, [edges, highlightSet]);
 
   const persist = useCallback(async (taskId: string, body: Record<string, unknown>) => {
     setError(null);
@@ -473,22 +510,29 @@ export default function TaskGraph({
       )}
 
       {/* Canvas + side panel */}
-      <div className="relative h-[72vh] rounded-xl border border-gray-200 bg-gray-50" dir="ltr">
+      <div
+        className={
+          fullscreen
+            ? "fixed inset-0 z-50 bg-gray-50"
+            : "relative h-[72vh] rounded-xl border border-gray-200 bg-gray-50"
+        }
+        dir="ltr"
+      >
         <ReactFlow
           onInit={(instance) => {
             rfRef.current = instance;
           }}
           nodes={displayNodes}
-          edges={displayEdges}
+          edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeDragStop={canManage ? onNodeDragStop : undefined}
           onConnect={canManage ? onConnect : undefined}
           onEdgesDelete={canManage ? onEdgesDelete : undefined}
-          onNodeClick={(_, node) => setSelectedId(node.id)}
-          onNodeMouseEnter={(_, node) => setHoveredId(node.id)}
-          onNodeMouseLeave={() => setHoveredId(null)}
-          onPaneClick={() => setSelectedId(null)}
+          onNodeClick={(_, node) => setActiveCardId(node.id)}
+          onNodeMouseEnter={(_, node) => setActiveCardId(node.id)}
+          onNodeMouseLeave={() => setActiveCardId(null)}
+          onPaneClick={() => setActiveCardId(null)}
           nodeTypes={nodeTypes}
           nodesConnectable={canManage}
           nodesDraggable={canManage}
@@ -498,17 +542,27 @@ export default function TaskGraph({
         >
           <Background />
           <Controls />
+          <Panel position="top-right">
+            <button
+              type="button"
+              onClick={() => setFullscreen((v) => !v)}
+              className="rounded-lg border border-gray-300 bg-white/95 px-2.5 py-1.5 text-sm shadow-sm hover:bg-gray-100"
+              title={fullscreen ? "יציאה ממסך מלא" : "מסך מלא"}
+            >
+              {fullscreen ? "✕ יציאה" : "⛶ מסך מלא"}
+            </button>
+          </Panel>
           <Panel position="top-left">
             <div className="flex flex-col gap-1.5 rounded-xl border border-gray-200 bg-white/95 p-3 text-xs shadow-sm" dir="rtl">
               <div className="flex items-center gap-2">
-                <span className="h-3 w-6 rounded bg-red-500" />
-                <span className="text-gray-700">נתיב קריטי</span>
+                <span className="h-1 w-6 rounded bg-red-500" />
+                <span className="text-gray-700">נתיב קריטי (גזע)</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="h-3 w-6 rounded bg-slate-400" />
-                <span className="text-gray-700">משימה עם שהות</span>
+                <span className="h-1 w-6 rounded bg-gray-900" />
+                <span className="text-gray-700">ענף רגיל</span>
               </div>
-              <p className="text-gray-400">ריחוף מדגיש שרשרת · לחיצה פותחת עריכה</p>
+              <p className="text-gray-400">ריחוף/לחיצה על נקודה מציג פרטים</p>
             </div>
           </Panel>
         </ReactFlow>
@@ -646,7 +700,7 @@ function SidePanel({
 
   return (
     <div
-      className="absolute inset-y-0 left-0 z-10 flex w-80 max-w-[85%] flex-col gap-3 overflow-y-auto border-r border-gray-200 bg-white p-4 shadow-xl"
+      className="absolute inset-y-0 right-0 z-40 flex w-80 max-w-[85%] flex-col gap-3 overflow-y-auto border-l border-gray-200 bg-white p-4 shadow-xl"
       dir="rtl"
     >
       <div className="flex items-start justify-between gap-2">
