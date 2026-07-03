@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
     "@xyflow/react": "^12.11.1",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.3",
