@@ -69,6 +69,8 @@ export async function POST(request: Request) {
     location,
     type,
     durationHours,
+    assignedTo,
+    dependsOn,
     sequenceItems,
     checklist,
   } = body as {
@@ -83,6 +85,8 @@ export async function POST(request: Request) {
     location?: unknown;
     type?: string;
     durationHours?: number;
+    assignedTo?: string;
+    dependsOn?: string[];
     sequenceItems?: { title: string; durationHours?: number }[];
     checklist?: { text: string; done?: boolean }[];
   };
@@ -121,6 +125,8 @@ export async function POST(request: Request) {
     location: sanitizeTaskLocation(location),
     type: taskType,
     durationHours,
+    assignedTo: assignedTo || undefined,
+    dependsOn: Array.isArray(dependsOn) ? dependsOn.filter((d) => typeof d === "string") : undefined,
     checklist: (checklist ?? []).map((item) => ({ text: item.text, done: !!item.done })),
   });
 

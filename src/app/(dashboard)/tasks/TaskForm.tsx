@@ -18,10 +18,14 @@ type SequenceItem = { title: string; durationHours: string };
 export default function TaskForm({
   projectId,
   templates = [],
+  workers = [],
+  siblingTasks = [],
   locations = emptyLocations(),
 }: {
   projectId: string;
   templates?: { _id: string; name: string }[];
+  workers?: { _id: string; name: string }[];
+  siblingTasks?: { _id: string; title: string }[];
   locations?: ProjectLocations;
 }) {
   const router = useRouter();
@@ -32,6 +36,8 @@ export default function TaskForm({
   const [stage, setStage] = useState("");
   const [trade, setTrade] = useState("");
   const [location, setLocation] = useState<TaskLocationValue>(EMPTY_LOCATION);
+  const [assignedTo, setAssignedTo] = useState("");
+  const [dependsOn, setDependsOn] = useState<string[]>([]);
   const [durationHours, setDurationHours] = useState("");
   const [type, setType] = useState<"single" | "sequence">("single");
   const [sequenceItems, setSequenceItems] = useState<SequenceItem[]>([
@@ -51,6 +57,10 @@ export default function TaskForm({
 
   function removeChecklistItem(index: number) {
     setChecklistItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function toggleDependency(id: string) {
+    setDependsOn((prev) => (prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]));
   }
 
   async function handleTemplateSubmit(e: React.FormEvent) {
@@ -105,6 +115,8 @@ export default function TaskForm({
       stage: stage || undefined,
       trade: trade || undefined,
       location,
+      assignedTo: assignedTo || undefined,
+      dependsOn: type === "single" ? dependsOn : undefined,
       durationHours: durationHours ? Number(durationHours) : undefined,
       type,
       checklist: checklistItems.map((text) => ({ text, done: false })),
@@ -314,6 +326,46 @@ export default function TaskForm({
       </div>
 
       <LocationFields options={locations} value={location} onChange={setLocation} />
+
+      {workers.length > 0 && (
+        <div className="flex flex-col gap-1 sm:max-w-[calc(50%-0.5rem)]">
+          <label htmlFor="assignedTo" className="text-sm text-gray-700">
+            עובד שטח אחראי
+          </label>
+          <select
+            id="assignedTo"
+            value={assignedTo}
+            onChange={(e) => setAssignedTo(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <option value="">לא משויך</option>
+            {workers.map((w) => (
+              <option key={w._id} value={w._id}>
+                {w.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {type === "single" && siblingTasks.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-gray-700">משימות חוסמות (תלות)</label>
+          <div className="flex flex-col gap-1 max-h-48 overflow-y-auto rounded-lg border border-gray-300 p-2">
+            {siblingTasks.map((sibling) => (
+              <label key={sibling._id} className="flex items-center gap-2 text-sm px-1 py-1">
+                <input
+                  type="checkbox"
+                  checked={dependsOn.includes(sibling._id)}
+                  onChange={() => toggleDependency(sibling._id)}
+                  className="accent-emerald-600"
+                />
+                {sibling.title}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       {type === "sequence" && (
         <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
