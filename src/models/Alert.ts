@@ -5,6 +5,7 @@ export const ALERT_TYPES = [
   "missing_material",
   "no_recent_photos",
   "stage_stalled",
+  "document_expiring",
 ] as const;
 export const ALERT_SEVERITIES = ["low", "medium", "high"] as const;
 
