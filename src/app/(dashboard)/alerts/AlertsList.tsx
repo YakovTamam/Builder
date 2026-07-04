@@ -13,6 +13,7 @@ const TYPE_LABELS: Record<string, string> = {
   missing_material: "חומר חסר",
   no_recent_photos: "אין תמונות עדכניות",
   stage_stalled: "שלב תקוע",
+  document_expiring: "מסמך/ביטוח פג תוקף",
 };
 
 type AlertItem = {

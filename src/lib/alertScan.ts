@@ -1,8 +1,10 @@
 import Alert from "@/models/Alert";
+import Document from "@/models/Document";
 import Material from "@/models/Material";
 import Photo from "@/models/Photo";
 import Project from "@/models/Project";
 import Task from "@/models/Task";
+import { getExpiryStatus, daysUntilExpiry } from "@/lib/documents";
 
 const NO_RECENT_PHOTOS_DAYS = 7;
 
@@ -146,6 +148,53 @@ export async function runAlertScan(opts?: { companyId?: string }): Promise<{ cre
     if (!alert.projectId) continue;
     const recentPhoto = await Photo.findOne({ projectId: alert.projectId, createdAt: { $gte: cutoff } }).lean();
     if (recentPhoto) {
+      await Alert.updateOne({ _id: alert._id }, { isRead: true });
+      resolved += 1;
+    }
+  }
+
+  // --- Expiring or expired documents (permits, insurance policies, ...) ---
+  const documentFilter: Record<string, unknown> = { expiryDate: { $exists: true, $ne: null } };
+  if (opts?.companyId) documentFilter.companyId = opts.companyId;
+  const documents = await Document.find(documentFilter).lean();
+
+  for (const doc of documents) {
+    const status = getExpiryStatus(doc.expiryDate, now.getTime());
+    if (status !== "expired" && status !== "expiring_soon") continue;
+
+    const existing = await Alert.findOne({
+      type: "document_expiring",
+      "metadata.documentId": doc._id,
+      isRead: false,
+    });
+    if (existing) continue;
+
+    const project = doc.projectId ? projMap.get(String(doc.projectId)) : undefined;
+    const scopeLabel = project ? `בפרויקט "${project.name}"` : "ברמת החברה";
+    const detail =
+      status === "expired"
+        ? `פג תוקף ב-${heDate(doc.expiryDate!)}`
+        : `יפוג תוקף בעוד ${daysUntilExpiry(doc.expiryDate!, now.getTime())} ימים (${heDate(doc.expiryDate!)})`;
+
+    await Alert.create({
+      companyId: doc.companyId,
+      projectId: doc.projectId ?? undefined,
+      type: "document_expiring",
+      severity: status === "expired" ? "high" : "medium",
+      title: `${status === "expired" ? "פג תוקף" : "עומד לפוג תוקף"}: ${doc.title}`,
+      description: `המסמך "${doc.title}" ${scopeLabel} ${detail}.`,
+      metadata: { documentId: doc._id },
+    });
+    created += 1;
+  }
+
+  const openDocumentAlerts = await Alert.find({ type: "document_expiring", isRead: false, ...companyScope }).lean();
+  for (const alert of openDocumentAlerts) {
+    const documentId = (alert.metadata as { documentId?: string } | undefined)?.documentId;
+    if (!documentId) continue;
+    const doc = await Document.findById(documentId).lean();
+    const status = getExpiryStatus(doc?.expiryDate, now.getTime());
+    if (status !== "expired" && status !== "expiring_soon") {
       await Alert.updateOne({ _id: alert._id }, { isRead: true });
       resolved += 1;
     }
