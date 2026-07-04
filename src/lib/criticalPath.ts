@@ -47,7 +47,17 @@ export type CpmResult = {
 
 type Graph = {
   ids: string[];
+  // The duration reported back to callers (0 when unset/invalid - the real,
+  // literal value the user entered, or lack thereof).
   duration: Map<string, number>;
+  // The duration actually used for the forward/backward pass. A task with no
+  // duration entered at all falls back to 1 hour here (not 0): a graph where
+  // every task is unestimated would otherwise make every path length 0,
+  // giving every task zero float and marking the whole graph "critical" -
+  // the degenerate case that made ordinary branches render as if they were
+  // on the trunk. A task with an *explicit* non-positive duration (e.g. a
+  // zero-length milestone) is left at 0, since that's a deliberate value.
+  weight: Map<string, number>;
   // predecessors[x] = tasks that must finish before x (x.dependsOn, filtered).
   predecessors: Map<string, string[]>;
   // successors[y] = tasks that depend on y.
@@ -59,6 +69,7 @@ function buildGraph(tasks: CpmTaskInput[]): Graph {
   const idSet = new Set(ids);
 
   const duration = new Map<string, number>();
+  const weight = new Map<string, number>();
   const predecessors = new Map<string, string[]>();
   const successors = new Map<string, string[]>();
 
@@ -68,8 +79,10 @@ function buildGraph(tasks: CpmTaskInput[]): Graph {
   }
 
   for (const task of tasks) {
-    const dur = typeof task.durationHours === "number" && task.durationHours > 0 ? task.durationHours : 0;
+    const hasExplicitDuration = typeof task.durationHours === "number" && !Number.isNaN(task.durationHours);
+    const dur = hasExplicitDuration && task.durationHours! > 0 ? task.durationHours! : 0;
     duration.set(task.id, dur);
+    weight.set(task.id, hasExplicitDuration ? dur : 1);
 
     // Ignore self-references and edges to tasks outside this set (e.g. deleted
     // or cross-project dangling refs) so the graph stays well-formed.
@@ -80,7 +93,7 @@ function buildGraph(tasks: CpmTaskInput[]): Graph {
     }
   }
 
-  return { ids, duration, predecessors, successors };
+  return { ids, duration, weight, predecessors, successors };
 }
 
 // Kahn's algorithm. Returns a topological order plus any ids left unresolved,
@@ -139,7 +152,7 @@ export function computeCriticalPath(tasks: CpmTaskInput[], startDate?: Date | nu
   for (const id of order) {
     const preds = graph.predecessors.get(id)!;
     const es = preds.reduce((max, p) => Math.max(max, earliestFinish.get(p) ?? 0), 0);
-    const ef = es + graph.duration.get(id)!;
+    const ef = es + graph.weight.get(id)!;
     earliestStart.set(id, es);
     earliestFinish.set(id, ef);
   }
@@ -157,7 +170,7 @@ export function computeCriticalPath(tasks: CpmTaskInput[], startDate?: Date | nu
     const lf = succs.length === 0
       ? projectDurationHours
       : succs.reduce((min, s) => Math.min(min, latestStart.get(s) ?? projectDurationHours), Infinity);
-    const ls = lf - graph.duration.get(id)!;
+    const ls = lf - graph.weight.get(id)!;
     latestFinish.set(id, lf);
     latestStart.set(id, ls);
   }
