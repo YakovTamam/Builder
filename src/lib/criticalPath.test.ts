@@ -69,14 +69,31 @@ describe("computeCriticalPath", () => {
     expect(r.tasks.B.earliestStartHours).toBe(8);
   });
 
-  it("treats a missing or non-positive duration as zero hours", () => {
+  it("treats a missing or non-positive duration as zero hours in the reported value", () => {
     const r = computeCriticalPath([
       { id: "A" },
       { id: "B", durationHours: -5, dependsOn: ["A"] },
     ]);
     expect(r.tasks.A.durationHours).toBe(0);
     expect(r.tasks.B.durationHours).toBe(0);
-    expect(r.projectDurationHours).toBe(0);
+  });
+
+  it("does not let every task read as critical just because none of them has a duration set", () => {
+    // A trunk of 3 unestimated tasks, plus a short dead-end branch off A.
+    // If a missing duration were scheduled as 0 hours (like an explicit
+    // zero-length milestone), every path in an all-unestimated graph would
+    // tie at length 0 and every task - including the branch - would come
+    // out "critical". A missing duration should default to a nominal 1 hour
+    // for scheduling purposes so the branch still shows real float.
+    const r = computeCriticalPath([
+      { id: "A" },
+      { id: "B", dependsOn: ["A"] },
+      { id: "C", dependsOn: ["B"] },
+      { id: "branch", dependsOn: ["A"] },
+    ]);
+    expect(r.criticalTaskIds.sort()).toEqual(["A", "B", "C"]);
+    expect(r.tasks.branch.isCritical).toBe(false);
+    expect(r.tasks.branch.floatHours).toBeGreaterThan(0);
   });
 
   it("returns an empty result for an empty task list", () => {
