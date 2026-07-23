@@ -3,9 +3,12 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
 import { MANAGE_ROLES, accessibleProjectFilter } from "@/lib/access";
+import { telegramLinkingConfigured } from "@/lib/telegram";
 import Project from "@/models/Project";
 import Task, { TASK_STATUSES } from "@/models/Task";
 import Alert from "@/models/Alert";
+import User from "@/models/User";
+import TelegramLinkCard from "../TelegramLinkCard";
 
 const STATUS_LABELS: Record<string, string> = {
   todo: "לביצוע",
@@ -39,6 +42,13 @@ export default async function DashboardPage() {
 
   const projectFilter = await accessibleProjectFilter(session);
   const projects = await Project.find(projectFilter).sort({ createdAt: -1 }).lean();
+
+  // Telegram linking prompt (only when the server has Telegram configured).
+  const telegramLinkable = telegramLinkingConfigured();
+  const me = telegramLinkable
+    ? await User.findById(session.sub).select("telegramChatId").lean()
+    : null;
+  const telegramLinked = Boolean(me?.telegramChatId);
   const projectIds = projects.map((p) => p._id);
   const canManage = MANAGE_ROLES.includes(session.role);
   const now = new Date();
@@ -104,6 +114,8 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-semibold">שלום, {session.name.split(" ")[0]} 👋</h1>
         <p className="text-sm text-gray-500 mt-0.5">מבט מהיר על הפרויקטים והמשימות שלך</p>
       </div>
+
+      {telegramLinkable && <TelegramLinkCard linked={telegramLinked} />}
 
       {/* KPIs — 2x2 on mobile, 4-up on desktop, all tappable */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

@@ -19,6 +19,10 @@ const userSchema = new Schema(
     avatar: { type: String },
     phone: { type: String },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
+    // Telegram notifications: the linked chat id, plus a one-time token used
+    // during the "/start <token>" linking handshake.
+    telegramChatId: { type: String },
+    telegramLinkToken: { type: String },
   },
   { timestamps: true },
 );

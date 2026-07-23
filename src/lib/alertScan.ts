@@ -5,6 +5,7 @@ import Photo from "@/models/Photo";
 import Project from "@/models/Project";
 import Task from "@/models/Task";
 import { getExpiryStatus, daysUntilExpiry } from "@/lib/documents";
+import { createAndNotifyAlert } from "@/lib/notify";
 
 const NO_RECENT_PHOTOS_DAYS = 7;
 
@@ -58,7 +59,7 @@ export async function runAlertScan(opts?: { companyId?: string }): Promise<{ cre
           material.expectedDate ? `היה אמור להגיע ב-${heDate(material.expectedDate)} ` : ""
         }וטרם הגיע.`;
 
-    await Alert.create({
+    await createAndNotifyAlert({
       companyId: project.companyId,
       projectId: project._id,
       type: "missing_material",
@@ -98,7 +99,7 @@ export async function runAlertScan(opts?: { companyId?: string }): Promise<{ cre
     const project = projMap.get(String(task.projectId));
     if (!project) continue;
 
-    await Alert.create({
+    await createAndNotifyAlert({
       companyId: project.companyId,
       projectId: project._id,
       type: "task_overdue",
@@ -132,7 +133,7 @@ export async function runAlertScan(opts?: { companyId?: string }): Promise<{ cre
     const existing = await Alert.findOne({ type: "no_recent_photos", projectId: project._id, isRead: false });
     if (existing) continue;
 
-    await Alert.create({
+    await createAndNotifyAlert({
       companyId: project.companyId,
       projectId: project._id,
       type: "no_recent_photos",
@@ -176,7 +177,7 @@ export async function runAlertScan(opts?: { companyId?: string }): Promise<{ cre
         ? `פג תוקף ב-${heDate(doc.expiryDate!)}`
         : `יפוג תוקף בעוד ${daysUntilExpiry(doc.expiryDate!, now.getTime())} ימים (${heDate(doc.expiryDate!)})`;
 
-    await Alert.create({
+    await createAndNotifyAlert({
       companyId: doc.companyId,
       projectId: doc.projectId ?? undefined,
       type: "document_expiring",
