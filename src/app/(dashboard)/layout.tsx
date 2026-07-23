@@ -8,7 +8,7 @@ const ROLE_LABELS: Record<string, string> = {
   super_admin: "מנהל-על",
   company_admin: "מנהל חברה",
   project_manager: "מנהל פרויקט",
-  field_worker: "עובד שטח",
+  field_worker: "עובד שטח (פועל)",
   consultant: "יועץ",
   client: "לקוח",
 };
@@ -35,6 +35,16 @@ const ADMIN_NAV_ITEM = { href: "/users", label: "משתמשים", icon: "👥" }
 const COMPANY_NAV_ITEM = { href: "/company", label: "החברה", icon: "🏢" };
 const SUPER_ADMIN_NAV_ITEM = { href: "/settings", label: "הגדרות", icon: "⚙️" };
 
+// Field workers (laborers) get a focused menu: their projects, their tasks,
+// and the day-to-day tools — not the company-wide management screens.
+const WORKER_NAV_ITEMS = [
+  { href: "/dashboard", label: "בית", icon: "🏠" },
+  { href: "/projects", label: "פרויקטים", icon: "🏗️" },
+  { href: "/tasks", label: "משימות", icon: "✅" },
+  { href: "/calendar", label: "יומן", icon: "📅" },
+  { href: "/photos", label: "תמונות", icon: "📷" },
+];
+
 const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
 
 export default async function DashboardLayout({
@@ -48,7 +58,8 @@ export default async function DashboardLayout({
 
   const isAdmin = session.role === "super_admin" || session.role === "company_admin";
   const canManage = MANAGE_ROLES.includes(session.role);
-  const navItems = [...BASE_NAV_ITEMS];
+  const isWorker = session.role === "field_worker";
+  const navItems = isWorker ? [...WORKER_NAV_ITEMS] : [...BASE_NAV_ITEMS];
   if (canManage) {
     navItems.push(...MANAGER_NAV_ITEMS);
   }

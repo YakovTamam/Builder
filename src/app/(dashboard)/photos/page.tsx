@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
 import Project from "@/models/Project";
-import { projectListFilter } from "@/lib/access";
+import { accessibleProjectFilter } from "@/lib/access";
 import PhotoGallery from "./PhotoGallery";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export default async function PhotosPage({
 
   await connectToDatabase();
 
-  const projects = await Project.find(projectListFilter(session)).sort({ createdAt: -1 }).lean();
+  const projects = await Project.find(await accessibleProjectFilter(session)).sort({ createdAt: -1 }).lean();
   const { projectId } = await searchParams;
   const selectedProjectId = projectId ?? (projects[0] ? String(projects[0]._id) : undefined);
 

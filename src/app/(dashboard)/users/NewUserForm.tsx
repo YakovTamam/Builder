@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 const ROLE_OPTIONS = [
   { value: "project_manager", label: "מנהל פרויקט" },
-  { value: "field_worker", label: "עובד שטח" },
+  { value: "field_worker", label: "עובד שטח (פועל)" },
   { value: "consultant", label: "יועץ" },
 ];
 

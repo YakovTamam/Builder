@@ -7,6 +7,10 @@ const projectSchema = new Schema(
     companyId: { type: Schema.Types.ObjectId, ref: "Company", required: true },
     name: { type: String, required: true },
     address: { type: String },
+    // Optional geo coordinates for precise navigation (e.g. the Waze button).
+    // When absent, navigation falls back to the free-text address.
+    lat: { type: Number },
+    lng: { type: Number },
     status: { type: String, enum: PROJECT_STATUSES, default: "planning" },
     progress: { type: Number, min: 0, max: 100, default: 0 },
     budget: { type: Number },

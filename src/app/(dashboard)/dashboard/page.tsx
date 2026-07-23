@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
-import { MANAGE_ROLES, projectListFilter } from "@/lib/access";
+import { MANAGE_ROLES, accessibleProjectFilter } from "@/lib/access";
 import Project from "@/models/Project";
 import Task, { TASK_STATUSES } from "@/models/Task";
 import Alert from "@/models/Alert";
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
 
   await connectToDatabase();
 
-  const projectFilter = projectListFilter(session);
+  const projectFilter = await accessibleProjectFilter(session);
   const projects = await Project.find(projectFilter).sort({ createdAt: -1 }).lean();
   const projectIds = projects.map((p) => p._id);
   const canManage = MANAGE_ROLES.includes(session.role);

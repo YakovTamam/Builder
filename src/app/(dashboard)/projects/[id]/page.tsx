@@ -3,7 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
 import Project from "@/models/Project";
+import Task from "@/models/Task";
 import DeleteProjectButton from "./DeleteProjectButton";
+import WazeButton from "../../WazeButton";
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   planning: { label: "בתכנון", className: "bg-gray-100 text-gray-800" },
@@ -39,15 +41,30 @@ export default async function ProjectDetailPage({
     notFound();
   }
 
+  // Field workers may only open a project they have an assigned task in.
+  if (session.role === "field_worker") {
+    const assigned = await Task.exists({ projectId: project._id, assignedTo: session.sub });
+    if (!assigned) notFound();
+  }
+
   const status = STATUS_LABELS[project.status ?? "planning"];
   const canManage = MANAGE_ROLES.includes(session.role);
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-semibold">{project.name}</h1>
-          {project.address && <p className="text-gray-500 text-sm mt-1">{project.address}</p>}
+        <div className="flex flex-col gap-2">
+          <div>
+            <h1 className="text-2xl font-semibold">{project.name}</h1>
+            {project.address && <p className="text-gray-500 text-sm mt-1">{project.address}</p>}
+          </div>
+          <WazeButton
+            target={{
+              address: project.address,
+              lat: typeof project.lat === "number" ? project.lat : undefined,
+              lng: typeof project.lng === "number" ? project.lng : undefined,
+            }}
+          />
         </div>
         <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${status.label ? status.className : ""}`}>
           {status.label}

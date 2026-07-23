@@ -3,8 +3,8 @@ import { connectToDatabase } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import Project, { PROJECT_STATUSES } from "@/models/Project";
 import { sanitizeLocations } from "@/lib/locations";
-
-const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
+import { parseCoordinates } from "@/lib/waze";
+import { accessibleProjectFilter, MANAGE_ROLES } from "@/lib/access";
 
 export async function GET() {
   const session = await getSession();
@@ -14,11 +14,7 @@ export async function GET() {
 
   await connectToDatabase();
 
-  const filter: Record<string, unknown> = { companyId: session.companyId };
-  if (session.role === "project_manager") {
-    filter.managerId = session.sub;
-  }
-
+  const filter = await accessibleProjectFilter(session);
   const projects = await Project.find(filter).sort({ createdAt: -1 }).lean();
   return NextResponse.json({ projects });
 }
@@ -32,9 +28,11 @@ export async function POST(request: Request) {
   await connectToDatabase();
 
   const body = await request.json();
-  const { name, address, status, budget, startDate, dueDate, locations } = body as {
+  const { name, address, lat, lng, status, budget, startDate, dueDate, locations } = body as {
     name?: string;
     address?: string;
+    lat?: unknown;
+    lng?: unknown;
     status?: string;
     budget?: number;
     startDate?: string;
@@ -50,10 +48,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "סטטוס לא תקין" }, { status: 400 });
   }
 
+  const coords = parseCoordinates(lat, lng);
+  if (coords === "invalid") {
+    return NextResponse.json({ error: "קואורדינטות לא תקינות" }, { status: 400 });
+  }
+
   const project = await Project.create({
     companyId: session.companyId,
     name,
     address,
+    lat: coords?.lat,
+    lng: coords?.lng,
     status: status ?? "planning",
     budget,
     startDate: startDate ? new Date(startDate) : undefined,

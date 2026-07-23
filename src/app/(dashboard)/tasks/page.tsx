@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
+import { accessibleProjectFilter } from "@/lib/access";
 import Project from "@/models/Project";
 import TaskBoard from "./TaskBoard";
 
@@ -18,11 +19,7 @@ export default async function TasksPage({
 
   await connectToDatabase();
 
-  const filter: Record<string, unknown> = { companyId: session.companyId };
-  if (session.role === "project_manager") {
-    filter.managerId = session.sub;
-  }
-
+  const filter = await accessibleProjectFilter(session);
   const projects = await Project.find(filter).sort({ createdAt: -1 }).lean();
   const { projectId } = await searchParams;
   const selectedProjectId = projectId ?? (projects[0] ? String(projects[0]._id) : undefined);
@@ -43,6 +40,9 @@ export default async function TasksPage({
             _id: String(p._id),
             name: p.name,
             startDate: p.startDate ? new Date(p.startDate).toISOString() : undefined,
+            address: p.address ?? undefined,
+            lat: typeof p.lat === "number" ? p.lat : undefined,
+            lng: typeof p.lng === "number" ? p.lng : undefined,
           }))}
           selectedProjectId={selectedProjectId}
           canManage={canManage}

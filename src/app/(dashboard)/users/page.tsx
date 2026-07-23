@@ -8,7 +8,7 @@ const ROLE_LABELS: Record<string, string> = {
   super_admin: "מנהל-על",
   company_admin: "מנהל חברה",
   project_manager: "מנהל פרויקט",
-  field_worker: "עובד שטח",
+  field_worker: "עובד שטח (פועל)",
   consultant: "יועץ",
   client: "לקוח",
 };

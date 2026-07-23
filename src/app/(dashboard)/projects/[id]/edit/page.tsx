@@ -40,6 +40,8 @@ export default async function EditProjectPage({
             _id: String(project._id),
             name: project.name,
             address: project.address,
+            lat: typeof project.lat === "number" ? project.lat : undefined,
+            lng: typeof project.lng === "number" ? project.lng : undefined,
             status: project.status,
             budget: project.budget,
             startDate: project.startDate,

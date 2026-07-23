@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TRADES, tradeLabel, tradeClassName } from "@/lib/trades";
 import { formatLocation, type TaskLocation } from "@/lib/locations";
+import WazeButton from "../WazeButton";
 
 const STATUS_COLUMNS = [
   { value: "todo", label: "לביצוע" },
@@ -32,7 +33,16 @@ type TaskItem = {
   location?: TaskLocation;
 };
 
-type ProjectItem = { _id: string; name: string; startDate?: string };
+type ProjectItem = {
+  _id: string;
+  name: string;
+  startDate?: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
+};
+
+type BoardView = "board" | "checklist";
 
 export default function TaskBoard({
   projects,
@@ -45,6 +55,7 @@ export default function TaskBoard({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const view: BoardView = searchParams.get("view") === "checklist" ? "checklist" : "board";
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [tradeFilter, setTradeFilter] = useState("");
@@ -105,6 +116,12 @@ export default function TaskBoard({
     router.push(`/tasks?${params.toString()}`);
   }
 
+  function handleViewChange(newView: BoardView) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", newView);
+    router.push(`/tasks?${params.toString()}`);
+  }
+
   async function handleStatusChange(taskId: string, status: string) {
     setTasks((prev) => prev.map((t) => (t._id === taskId ? { ...t, status } : t)));
     await fetch(`/api/tasks/${taskId}`, {
@@ -112,6 +129,25 @@ export default function TaskBoard({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
+  }
+
+  // Checklist view: ticking an item completes the task; unticking reopens it.
+  // Reverts the optimistic change if the server rejects it (e.g. a task can't be
+  // completed while it still has unfinished prerequisites).
+  async function handleToggleDone(taskId: string, done: boolean) {
+    const status = done ? "done" : "todo";
+    const previous = tasks.find((t) => t._id === taskId)?.status;
+    setTasks((prev) => prev.map((t) => (t._id === taskId ? { ...t, status } : t)));
+    const res = await fetch(`/api/tasks/${taskId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok && previous) {
+      setTasks((prev) => prev.map((t) => (t._id === taskId ? { ...t, status: previous } : t)));
+      const data = await res.json().catch(() => null);
+      if (data?.error) alert(data.error);
+    }
   }
 
   // Quick inline create: title only, in the given column's status. Keeps the
@@ -204,6 +240,39 @@ export default function TaskBoard({
       )}
 
       <div className="flex flex-wrap items-center gap-2">
+        {/* View switch: the existing board vs. a flat checklist */}
+        <div className="inline-flex rounded-lg border border-gray-300 bg-white p-0.5 text-sm">
+          <button
+            type="button"
+            onClick={() => handleViewChange("board")}
+            className={`rounded-md px-3 py-1 transition-colors ${
+              view === "board" ? "bg-emerald-600 text-white" : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            🗂️ לוח
+          </button>
+          <button
+            type="button"
+            onClick={() => handleViewChange("checklist")}
+            className={`rounded-md px-3 py-1 transition-colors ${
+              view === "checklist" ? "bg-emerald-600 text-white" : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            {"☑️ צ'ק-ליסט"}
+          </button>
+        </div>
+
+        {selectedProject && (
+          <WazeButton
+            target={{
+              address: selectedProject.address,
+              lat: selectedProject.lat,
+              lng: selectedProject.lng,
+            }}
+            className="inline-flex items-center gap-2 rounded-lg border border-sky-600 text-sky-700 hover:bg-sky-50 px-3 py-1.5 text-sm font-medium transition-colors"
+          />
+        )}
+
         <Link
           href={`/critical-path?projectId=${projectId}`}
           className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-100 transition-colors"
@@ -244,6 +313,8 @@ export default function TaskBoard({
 
       {loading ? (
         <p className="text-gray-500 text-sm">טוען משימות...</p>
+      ) : view === "checklist" ? (
+        <ChecklistView tasks={visibleTasks} onToggle={handleToggleDone} />
       ) : (
         <div className="font-project-tasks grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {STATUS_COLUMNS.map((column) => {
@@ -414,6 +485,71 @@ export default function TaskBoard({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// A flat, checkable list of the project's tasks. Ticking a row marks the task
+// "done"; the same trade/building filters as the board apply (via visibleTasks).
+function ChecklistView({
+  tasks,
+  onToggle,
+}: {
+  tasks: TaskItem[];
+  onToggle: (taskId: string, done: boolean) => void;
+}) {
+  if (tasks.length === 0) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500">
+        אין משימות להצגה.
+      </div>
+    );
+  }
+
+  const doneCount = tasks.filter((t) => t.status === "done").length;
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white">
+      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5">
+        <h2 className="text-sm font-medium text-gray-700">רשימת משימות</h2>
+        <span className="text-xs text-gray-400">
+          {doneCount}/{tasks.length} הושלמו
+        </span>
+      </div>
+      <ul className="divide-y divide-gray-100">
+        {tasks.map((task) => {
+          const done = task.status === "done";
+          const location = formatLocation(task.location);
+          return (
+            <li key={task._id} className="flex items-start gap-3 px-4 py-2.5">
+              <input
+                type="checkbox"
+                checked={done}
+                onChange={(e) => onToggle(task._id, e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-emerald-600"
+                aria-label={`סמן ${task.title} כהושלם`}
+              />
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <Link
+                  href={`/tasks/${task._id}`}
+                  className={`text-sm hover:underline ${done ? "text-gray-400 line-through" : "text-gray-900"}`}
+                >
+                  {task.title}
+                </Link>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                  {task.trade && (
+                    <span className={`rounded-full px-2 py-0.5 ${tradeClassName(task.trade)}`}>
+                      {tradeLabel(task.trade)}
+                    </span>
+                  )}
+                  {location && <span>📍 {location}</span>}
+                  {task.dueDate && <span>📅 {new Date(task.dueDate).toLocaleDateString("he-IL")}</span>}
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

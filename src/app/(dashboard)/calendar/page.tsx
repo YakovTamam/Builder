@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
 import Project from "@/models/Project";
+import { accessibleProjectFilter } from "@/lib/access";
 import CalendarView from "./CalendarView";
 
 export const dynamic = "force-dynamic";
@@ -18,11 +19,7 @@ export default async function CalendarPage({
 
   await connectToDatabase();
 
-  const filter: Record<string, unknown> = { companyId: session.companyId };
-  if (session.role === "project_manager") {
-    filter.managerId = session.sub;
-  }
-
+  const filter = await accessibleProjectFilter(session);
   const projects = await Project.find(filter).sort({ createdAt: -1 }).lean();
   const { projectId } = await searchParams;
   const selectedProjectId = projectId ?? (projects[0] ? String(projects[0]._id) : undefined);

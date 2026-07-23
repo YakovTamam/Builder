@@ -3,8 +3,8 @@ import { connectToDatabase } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import Project, { PROJECT_STATUSES } from "@/models/Project";
 import { sanitizeLocations } from "@/lib/locations";
-
-const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
+import { parseCoordinates } from "@/lib/waze";
+import { MANAGE_ROLES } from "@/lib/access";
 
 async function loadProject(id: string, session: { companyId?: string; role: string; sub: string }) {
   const project = await Project.findOne({ _id: id, companyId: session.companyId });
@@ -55,19 +55,32 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { name, address, status, progress, budget, startDate, dueDate, locations } = body as {
-    name?: string;
-    address?: string;
-    status?: string;
-    progress?: number;
-    budget?: number;
-    startDate?: string;
-    dueDate?: string;
-    locations?: unknown;
-  };
+  const { name, address, lat, lng, status, progress, budget, startDate, dueDate, locations } =
+    body as {
+      name?: string;
+      address?: string;
+      lat?: unknown;
+      lng?: unknown;
+      status?: string;
+      progress?: number;
+      budget?: number;
+      startDate?: string;
+      dueDate?: string;
+      locations?: unknown;
+    };
 
   if (status && !PROJECT_STATUSES.includes(status as (typeof PROJECT_STATUSES)[number])) {
     return NextResponse.json({ error: "סטטוס לא תקין" }, { status: 400 });
+  }
+
+  // lat/lng travel together in the form, so handle them as a pair.
+  if (lat !== undefined || lng !== undefined) {
+    const coords = parseCoordinates(lat, lng);
+    if (coords === "invalid") {
+      return NextResponse.json({ error: "קואורדינטות לא תקינות" }, { status: 400 });
+    }
+    project.lat = coords?.lat;
+    project.lng = coords?.lng;
   }
 
   if (name !== undefined) project.name = name;

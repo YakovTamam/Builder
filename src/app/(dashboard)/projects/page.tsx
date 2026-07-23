@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
+import { accessibleProjectFilter, MANAGE_ROLES } from "@/lib/access";
 import Project from "@/models/Project";
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
@@ -10,8 +11,6 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   on_hold: { label: "מוקפא", className: "bg-amber-100 text-amber-700" },
   completed: { label: "הושלם", className: "bg-blue-100 text-blue-700" },
 };
-
-const MANAGE_ROLES = ["super_admin", "company_admin", "project_manager"];
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +22,7 @@ export default async function ProjectsPage() {
 
   await connectToDatabase();
 
-  const filter: Record<string, unknown> = { companyId: session.companyId };
-  if (session.role === "project_manager") {
-    filter.managerId = session.sub;
-  }
-
+  const filter = await accessibleProjectFilter(session);
   const projects = await Project.find(filter).sort({ createdAt: -1 }).lean();
   const canCreate = MANAGE_ROLES.includes(session.role);
 

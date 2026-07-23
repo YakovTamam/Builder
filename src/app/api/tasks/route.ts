@@ -43,7 +43,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "פרויקט לא נמצא" }, { status: 404 });
   }
 
-  const tasks = await Task.find({ projectId }).sort({ sequenceOrder: 1, createdAt: 1 }).lean();
+  const taskFilter: Record<string, unknown> = { projectId };
+  // Field workers only ever see the tasks assigned to them.
+  if (session.role === "field_worker") {
+    taskFilter.assignedTo = session.sub;
+  }
+
+  const tasks = await Task.find(taskFilter).sort({ sequenceOrder: 1, createdAt: 1 }).lean();
 
   return NextResponse.json({ tasks });
 }

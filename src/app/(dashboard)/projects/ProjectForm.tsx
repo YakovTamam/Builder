@@ -22,6 +22,8 @@ type ProjectFormValues = {
   _id?: string;
   name?: string;
   address?: string;
+  lat?: number | null;
+  lng?: number | null;
   status?: string;
   budget?: number;
   startDate?: string | Date | null;
@@ -109,6 +111,12 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
 
   const [name, setName] = useState(project?.name ?? "");
   const [address, setAddress] = useState(project?.address ?? "");
+  const [lat, setLat] = useState(
+    typeof project?.lat === "number" ? String(project.lat) : "",
+  );
+  const [lng, setLng] = useState(
+    typeof project?.lng === "number" ? String(project.lng) : "",
+  );
   const [status, setStatus] = useState(project?.status ?? "planning");
   const [budget, setBudget] = useState(project?.budget?.toString() ?? "");
   const [startDate, setStartDate] = useState(toDateInputValue(project?.startDate));
@@ -126,6 +134,8 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
     const payload: Record<string, unknown> = {
       name,
       address,
+      lat: lat.trim() ? Number(lat) : null,
+      lng: lng.trim() ? Number(lng) : null,
       status,
       budget: budget ? Number(budget) : undefined,
       startDate: startDate || undefined,
@@ -186,6 +196,43 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
           onChange={(e) => setAddress(e.target.value)}
           className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
+        <p className="text-xs text-gray-500">משמש לכפתור הניווט ב-Waze.</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="lat" className="text-sm text-gray-700">
+            קו רוחב (lat) — לא חובה
+          </label>
+          <input
+            id="lat"
+            type="number"
+            step="any"
+            inputMode="decimal"
+            placeholder="למשל: 32.0853"
+            value={lat}
+            onChange={(e) => setLat(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="lng" className="text-sm text-gray-700">
+            קו אורך (lng) — לא חובה
+          </label>
+          <input
+            id="lng"
+            type="number"
+            step="any"
+            inputMode="decimal"
+            placeholder="למשל: 34.7818"
+            value={lng}
+            onChange={(e) => setLng(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+        <p className="text-xs text-gray-500 sm:col-span-2">
+          קואורדינטות מדויקות (אם ידועות) משפרות את הניווט ב-Waze; אחרת הניווט ישתמש בכתובת.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
