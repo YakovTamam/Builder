@@ -30,6 +30,8 @@
 4. הגדירו את שלושת משתני הסביבה גם ב-Vercel.
 
 **חיבור משתמש:** כל משתמש נכנס למערכת, לוחץ על "חבר Telegram" בדשבורד, פותח את הבוט ולוחץ **Start**. מאותו רגע הוא מקבל התראות. לניתוק — כפתור "נתק" בדשבורד או שליחת `/stop` לבוט. ללא הגדרת `TELEGRAM_BOT_TOKEN`, שאר המערכת פועלת רגיל וההתראות פשוט לא נשלחות.
+
+**בוקר טוב (brief יומי):** אחת ליום המערכת יכולה לשלוח לכל פועל את רשימת המשימות שלו להיום ב-Telegram. ההפעלה זהה למנוע ההתראות — `POST /api/notify/daily` עם header `Authorization: Bearer <ALERTS_CRON_SECRET>`. הפעלה אוטומטית: `.github/workflows/daily-briefing.yml` (יש להסיר את ההערה מ-`schedule` ולהגדיר את ה-secret `DAILY_BRIEF_URL`, למשל `https://<הדומיין>/api/notify/daily`).
 2. התקן תלויות: `npm install`
 3. הרץ שרת פיתוח: `npm run dev`
 

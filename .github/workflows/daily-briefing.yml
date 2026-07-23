@@ -1,0 +1,17 @@
+name: Daily worker briefing
+
+on:
+  workflow_dispatch:
+  # schedule:
+  #   - cron: "0 5 * * *" # 05:00 UTC ≈ בוקר בישראל
+  # Disabled until DAILY_BRIEF_URL and ALERTS_CRON_SECRET secrets are
+  # configured (see repo/Vercel settings).
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send morning briefs
+        run: |
+          curl -sf -X POST "${{ secrets.DAILY_BRIEF_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.ALERTS_CRON_SECRET }}"

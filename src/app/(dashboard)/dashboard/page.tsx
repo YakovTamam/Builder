@@ -2,13 +2,15 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
-import { MANAGE_ROLES, accessibleProjectFilter } from "@/lib/access";
+import { MANAGE_ROLES, WORKER_ROLE, accessibleProjectFilter } from "@/lib/access";
 import { telegramLinkingConfigured } from "@/lib/telegram";
+import { loadWorkerAgenda } from "@/lib/workerTasks";
 import Project from "@/models/Project";
 import Task, { TASK_STATUSES } from "@/models/Task";
 import Alert from "@/models/Alert";
 import User from "@/models/User";
 import TelegramLinkCard from "../TelegramLinkCard";
+import WorkerHome from "../WorkerHome";
 
 const STATUS_LABELS: Record<string, string> = {
   todo: "לביצוע",
@@ -40,15 +42,31 @@ export default async function DashboardPage() {
 
   await connectToDatabase();
 
-  const projectFilter = await accessibleProjectFilter(session);
-  const projects = await Project.find(projectFilter).sort({ createdAt: -1 }).lean();
-
   // Telegram linking prompt (only when the server has Telegram configured).
   const telegramLinkable = telegramLinkingConfigured();
   const me = telegramLinkable
     ? await User.findById(session.sub).select("telegramChatId").lean()
     : null;
   const telegramLinked = Boolean(me?.telegramChatId);
+
+  // Field workers get a focused "what's next" home rather than the manager
+  // KPI dashboard.
+  if (session.role === WORKER_ROLE) {
+    const agenda = await loadWorkerAgenda(session.sub);
+    return (
+      <div className="flex flex-col gap-5">
+        <div>
+          <h1 className="text-2xl font-semibold">שלום, {session.name.split(" ")[0]} 👋</h1>
+          <p className="text-sm text-gray-500 mt-0.5">המשימות שלך, לפי סדר עדיפות</p>
+        </div>
+        {telegramLinkable && <TelegramLinkCard linked={telegramLinked} />}
+        <WorkerHome agenda={agenda} />
+      </div>
+    );
+  }
+
+  const projectFilter = await accessibleProjectFilter(session);
+  const projects = await Project.find(projectFilter).sort({ createdAt: -1 }).lean();
   const projectIds = projects.map((p) => p._id);
   const canManage = MANAGE_ROLES.includes(session.role);
   const now = new Date();

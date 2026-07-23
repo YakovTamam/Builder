@@ -3,6 +3,7 @@ import Project from "@/models/Project";
 import Task from "@/models/Task";
 import User from "@/models/User";
 import { escapeHtml, sendTelegramMessage, telegramConfigured } from "@/lib/telegram";
+import { loadWorkerAgenda, type WorkerTaskView } from "@/lib/workerTasks";
 
 type AlertDoc = {
   _id: unknown;
@@ -76,6 +77,51 @@ export async function dispatchAlertNotifications(alert: AlertDoc): Promise<void>
   await Promise.allSettled(
     recipients.map((u) => sendTelegramMessage(String(u.telegramChatId), text)),
   );
+}
+
+const MAX_BRIEF_TASKS = 8;
+
+function formatDailyBrief(name: string, tasks: WorkerTaskView[]): string {
+  const firstName = name.split(" ")[0];
+  const lines = [`☀️ בוקר טוב, ${escapeHtml(firstName)}!`, `המשימות שלך להיום (${tasks.length}):`];
+
+  for (const task of tasks.slice(0, MAX_BRIEF_TASKS)) {
+    const parts = [`• <b>${escapeHtml(task.title)}</b>`];
+    if (task.projectName) parts.push(escapeHtml(task.projectName));
+    if (task.location) parts.push(`📍 ${escapeHtml(task.location)}`);
+    if (task.dueDate) {
+      const overdue = new Date(task.dueDate).getTime() < Date.now();
+      parts.push(overdue ? "⏰ באיחור" : `📅 ${new Date(task.dueDate).toLocaleDateString("he-IL")}`);
+    }
+    lines.push(parts.join(" · "));
+  }
+
+  if (tasks.length > MAX_BRIEF_TASKS) lines.push(`ועוד ${tasks.length - MAX_BRIEF_TASKS}…`);
+  return lines.join("\n");
+}
+
+// Send each linked user a morning brief of their ready-to-start tasks. Users
+// with no actionable tasks are skipped. Best-effort; intended to be triggered
+// by a daily cron (see /api/notify/daily).
+export async function sendDailyBriefings(): Promise<{ sent: number }> {
+  if (!telegramConfigured()) return { sent: 0 };
+
+  const users = await User.find({
+    status: "active",
+    telegramChatId: { $exists: true, $ne: null },
+  })
+    .select("_id name telegramChatId")
+    .lean();
+
+  let sent = 0;
+  for (const user of users) {
+    const { ready } = await loadWorkerAgenda(String(user._id));
+    if (ready.length === 0) continue;
+    const ok = await sendTelegramMessage(String(user.telegramChatId), formatDailyBrief(user.name, ready));
+    if (ok) sent += 1;
+  }
+
+  return { sent };
 }
 
 // Create an Alert and notify its recipients. Notification failures are
