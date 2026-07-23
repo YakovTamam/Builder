@@ -97,7 +97,7 @@ export default async function TaskDetailPage({
   const blockingMaterials = linkedMaterials.filter(materialLate);
 
   return (
-    <div className="font-project-tasks flex flex-col gap-6 max-w-2xl">
+    <div className="flex flex-col gap-6 max-w-2xl">
       <div className="flex flex-col gap-1">
         <Link href={`/tasks?projectId=${project._id}`} className="text-sm text-gray-500 hover:text-emerald-700">
           ← חזרה למשימות {project.name}

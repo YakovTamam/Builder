@@ -58,6 +58,7 @@ export default function TaskBoard({
   const view: BoardView = searchParams.get("view") === "checklist" ? "checklist" : "board";
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [tradeFilter, setTradeFilter] = useState("");
   const [buildingFilter, setBuildingFilter] = useState("");
   const [addingColumn, setAddingColumn] = useState<string | null>(null);
@@ -146,7 +147,7 @@ export default function TaskBoard({
     if (!res.ok && previous) {
       setTasks((prev) => prev.map((t) => (t._id === taskId ? { ...t, status: previous } : t)));
       const data = await res.json().catch(() => null);
-      if (data?.error) alert(data.error);
+      setError(data?.error ?? "לא ניתן היה לעדכן את המשימה");
     }
   }
 
@@ -235,7 +236,7 @@ export default function TaskBoard({
       {selectedProject && (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
           <p className="text-xs text-emerald-700">מציג משימות עבור</p>
-          <h2 className="font-project-tasks text-xl font-semibold text-emerald-900">{selectedProject.name}</h2>
+          <h2 className="text-xl font-semibold text-emerald-900">{selectedProject.name}</h2>
         </div>
       )}
 
@@ -311,12 +312,26 @@ export default function TaskBoard({
         )}
       </div>
 
+      {error && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => setError(null)}
+            className="shrink-0 text-red-400 hover:text-red-700 text-lg leading-none"
+            aria-label="סגור"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {loading ? (
-        <p className="text-gray-500 text-sm">טוען משימות...</p>
+        <BoardSkeleton view={view} />
       ) : view === "checklist" ? (
         <ChecklistView tasks={visibleTasks} onToggle={handleToggleDone} />
       ) : (
-        <div className="font-project-tasks grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {STATUS_COLUMNS.map((column) => {
             const columnTasks = visibleTasks.filter((t) => t.status === column.value);
             return (
@@ -489,6 +504,36 @@ export default function TaskBoard({
   );
 }
 
+// Lightweight placeholder shown while tasks load, shaped like the view it
+// precedes so the layout doesn't jump when real data arrives.
+function BoardSkeleton({ view }: { view: BoardView }) {
+  if (view === "checklist") {
+    return (
+      <div className="card divide-y divide-gray-100">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-3">
+            <div className="skeleton h-4 w-4 rounded" />
+            <div className="skeleton h-4 flex-1 max-w-[60%]" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {STATUS_COLUMNS.map((column) => (
+        <div key={column.value} className="card flex flex-col gap-3 p-3">
+          <div className="skeleton h-4 w-20" />
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="skeleton h-16 w-full" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // A flat, checkable list of the project's tasks. Ticking a row marks the task
 // "done"; the same trade/building filters as the board apply (via visibleTasks).
 function ChecklistView({
@@ -500,16 +545,14 @@ function ChecklistView({
 }) {
   if (tasks.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-500">
-        אין משימות להצגה.
-      </div>
+      <div className="card p-4 text-sm text-gray-500">אין משימות להצגה.</div>
     );
   }
 
   const doneCount = tasks.filter((t) => t.status === "done").length;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white">
+    <div className="card">
       <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5">
         <h2 className="text-sm font-medium text-gray-700">רשימת משימות</h2>
         <span className="text-xs text-gray-400">

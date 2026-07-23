@@ -41,8 +41,21 @@ export default async function ProjectsPage() {
       </div>
 
       {projects.length === 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 text-gray-500 text-sm">
-          אין פרויקטים עדיין.
+        <div className="card flex flex-col items-center gap-3 px-4 py-12 text-center">
+          <span className="text-4xl" aria-hidden>
+            🏗️
+          </span>
+          <div>
+            <p className="font-medium text-gray-900">אין פרויקטים עדיין</p>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {canCreate ? "התחל בהוספת הפרויקט הראשון שלך." : "לא שויכת עדיין לפרויקטים."}
+            </p>
+          </div>
+          {canCreate && (
+            <Link href="/projects/new" className="btn-primary mt-1">
+              + פרויקט חדש
+            </Link>
+          )}
         </div>
       )}
 
