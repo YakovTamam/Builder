@@ -13,7 +13,10 @@ const projectSchema = new Schema(
     lng: { type: Number },
     status: { type: String, enum: PROJECT_STATUSES, default: "planning" },
     progress: { type: Number, min: 0, max: 100, default: 0 },
+    // Price quoted to the client (revenue). Margin = budget − computed cost.
     budget: { type: Number },
+    // Labour rate (₪/hour) used to cost the project's task hours.
+    laborRate: { type: Number },
     startDate: { type: Date },
     dueDate: { type: Date },
     managerId: { type: Schema.Types.ObjectId, ref: "User" },

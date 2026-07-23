@@ -55,7 +55,7 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { name, address, lat, lng, status, progress, budget, startDate, dueDate, locations } =
+  const { name, address, lat, lng, status, progress, budget, laborRate, startDate, dueDate, locations } =
     body as {
       name?: string;
       address?: string;
@@ -64,6 +64,7 @@ export async function PATCH(
       status?: string;
       progress?: number;
       budget?: number;
+      laborRate?: number;
       startDate?: string;
       dueDate?: string;
       locations?: unknown;
@@ -88,6 +89,7 @@ export async function PATCH(
   if (status !== undefined) project.status = status as (typeof PROJECT_STATUSES)[number];
   if (progress !== undefined) project.progress = Math.min(100, Math.max(0, progress));
   if (budget !== undefined) project.budget = budget;
+  if (laborRate !== undefined) project.laborRate = laborRate;
   if (startDate !== undefined) project.startDate = startDate ? new Date(startDate) : undefined;
   if (dueDate !== undefined) project.dueDate = dueDate ? new Date(dueDate) : undefined;
   if (locations !== undefined) project.locations = sanitizeLocations(locations);

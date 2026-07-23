@@ -38,17 +38,19 @@ export async function POST(request: Request) {
   await connectToDatabase();
 
   const body = await request.json();
-  const { projectId, name, quantity, unit, supplier, status, expectedDate, taskId, notes } = body as {
-    projectId?: string;
-    name?: string;
-    quantity?: number;
-    unit?: string;
-    supplier?: string;
-    status?: string;
-    expectedDate?: string;
-    taskId?: string;
-    notes?: string;
-  };
+  const { projectId, name, quantity, unit, unitCost, supplier, status, expectedDate, taskId, notes } =
+    body as {
+      projectId?: string;
+      name?: string;
+      quantity?: number;
+      unit?: string;
+      unitCost?: number;
+      supplier?: string;
+      status?: string;
+      expectedDate?: string;
+      taskId?: string;
+      notes?: string;
+    };
 
   if (!projectId || !name || quantity === undefined) {
     return NextResponse.json({ error: "חסרים שדות חובה" }, { status: 400 });
@@ -68,6 +70,7 @@ export async function POST(request: Request) {
     name,
     quantity,
     unit,
+    unitCost,
     supplier,
     status: status ?? "ordered",
     expectedDate: expectedDate ? new Date(expectedDate) : undefined,

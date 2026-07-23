@@ -32,11 +32,12 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { name, category, ownership, supplier, status, startDate, endDate, taskId, notes } = body as {
+  const { name, category, ownership, supplier, cost, status, startDate, endDate, taskId, notes } = body as {
     name?: string;
     category?: string;
     ownership?: string;
     supplier?: string;
+    cost?: number;
     status?: string;
     startDate?: string;
     endDate?: string;
@@ -65,6 +66,7 @@ export async function PATCH(
   if (name !== undefined) equipment.name = name;
   if (category !== undefined) equipment.category = category;
   if (supplier !== undefined) equipment.supplier = supplier;
+  if (cost !== undefined) equipment.cost = cost;
   if (startDate !== undefined) equipment.startDate = startDate ? new Date(startDate) : undefined;
   if (endDate !== undefined) equipment.endDate = endDate ? new Date(endDate) : undefined;
   if (taskId !== undefined) equipment.taskId = taskId || undefined;

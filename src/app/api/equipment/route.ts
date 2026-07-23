@@ -43,13 +43,14 @@ export async function POST(request: Request) {
   await connectToDatabase();
 
   const body = await request.json();
-  const { projectId, name, category, ownership, supplier, status, startDate, endDate, taskId, notes } =
+  const { projectId, name, category, ownership, supplier, cost, status, startDate, endDate, taskId, notes } =
     body as {
       projectId?: string;
       name?: string;
       category?: string;
       ownership?: string;
       supplier?: string;
+      cost?: number;
       status?: string;
       startDate?: string;
       endDate?: string;
@@ -80,6 +81,7 @@ export async function POST(request: Request) {
     category,
     ownership: ownership ?? "owned",
     supplier,
+    cost,
     status: status ?? "scheduled",
     startDate: startDate ? new Date(startDate) : undefined,
     endDate: endDate ? new Date(endDate) : undefined,

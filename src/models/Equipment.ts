@@ -15,6 +15,8 @@ const equipmentSchema = new Schema(
     category: { type: String },
     ownership: { type: String, enum: EQUIPMENT_OWNERSHIP, default: "owned" },
     supplier: { type: String },
+    // Total cost (₪) of this machine for the booking (rental or allocation).
+    cost: { type: Number },
     startDate: { type: Date },
     endDate: { type: Date },
     status: { type: String, enum: EQUIPMENT_STATUSES, default: "scheduled" },

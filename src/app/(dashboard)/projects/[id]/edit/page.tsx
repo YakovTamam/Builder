@@ -44,6 +44,7 @@ export default async function EditProjectPage({
             lng: typeof project.lng === "number" ? project.lng : undefined,
             status: project.status,
             budget: project.budget,
+            laborRate: typeof project.laborRate === "number" ? project.laborRate : undefined,
             startDate: project.startDate,
             dueDate: project.dueDate,
             progress: project.progress,

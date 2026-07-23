@@ -28,13 +28,14 @@ export async function POST(request: Request) {
   await connectToDatabase();
 
   const body = await request.json();
-  const { name, address, lat, lng, status, budget, startDate, dueDate, locations } = body as {
+  const { name, address, lat, lng, status, budget, laborRate, startDate, dueDate, locations } = body as {
     name?: string;
     address?: string;
     lat?: unknown;
     lng?: unknown;
     status?: string;
     budget?: number;
+    laborRate?: number;
     startDate?: string;
     dueDate?: string;
     locations?: unknown;
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
     lng: coords?.lng,
     status: status ?? "planning",
     budget,
+    laborRate,
     startDate: startDate ? new Date(startDate) : undefined,
     dueDate: dueDate ? new Date(dueDate) : undefined,
     locations: locations !== undefined ? sanitizeLocations(locations) : undefined,

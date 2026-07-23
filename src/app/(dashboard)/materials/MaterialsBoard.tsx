@@ -18,6 +18,7 @@ type MaterialItem = {
   name: string;
   quantity: number;
   unit?: string;
+  unitCost?: number;
   supplier?: string;
   status: string;
   expectedDate?: string;
@@ -52,6 +53,7 @@ export default function MaterialsBoard({
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("");
+  const [unitCost, setUnitCost] = useState("");
   const [supplier, setSupplier] = useState("");
   const [expectedDate, setExpectedDate] = useState("");
   const [taskId, setTaskId] = useState("");
@@ -118,6 +120,7 @@ export default function MaterialsBoard({
           name,
           quantity: Number(quantity),
           unit: unit || undefined,
+          unitCost: unitCost ? Number(unitCost) : undefined,
           supplier: supplier || undefined,
           expectedDate: expectedDate || undefined,
           taskId: taskId || undefined,
@@ -132,6 +135,7 @@ export default function MaterialsBoard({
       setName("");
       setQuantity("");
       setUnit("");
+      setUnitCost("");
       setSupplier("");
       setExpectedDate("");
       setTaskId("");
@@ -194,6 +198,16 @@ export default function MaterialsBoard({
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
               placeholder="טון, יח׳..."
+              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-gray-700">מחיר ליחידה (₪)</label>
+            <input
+              type="number"
+              min={0}
+              value={unitCost}
+              onChange={(e) => setUnitCost(e.target.value)}
               className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
@@ -267,6 +281,11 @@ export default function MaterialsBoard({
                     <span>
                       {material.quantity} {material.unit ?? ""}
                     </span>
+                    {typeof material.unitCost === "number" && material.unitCost > 0 && (
+                      <span>
+                        עלות: ₪{(material.quantity * material.unitCost).toLocaleString("he-IL")}
+                      </span>
+                    )}
                     {material.supplier && <span>ספק: {material.supplier}</span>}
                     {material.expectedDate && (
                       <span>צפוי: {new Date(material.expectedDate).toLocaleDateString("he-IL")}</span>

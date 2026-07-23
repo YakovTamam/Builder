@@ -19,6 +19,7 @@ type EquipmentItem = {
   category?: string;
   ownership: string;
   supplier?: string;
+  cost?: number;
   status: string;
   startDate?: string;
   endDate?: string;
@@ -53,6 +54,7 @@ export default function EquipmentBoard({
   const [category, setCategory] = useState("");
   const [ownership, setOwnership] = useState("owned");
   const [supplier, setSupplier] = useState("");
+  const [cost, setCost] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +132,7 @@ export default function EquipmentBoard({
           category: category || undefined,
           ownership,
           supplier: supplier || undefined,
+          cost: cost ? Number(cost) : undefined,
           startDate: startDate || undefined,
           endDate: endDate || undefined,
         }),
@@ -153,6 +156,7 @@ export default function EquipmentBoard({
       setName("");
       setCategory("");
       setSupplier("");
+      setCost("");
       setStartDate("");
       setEndDate("");
       setShowForm(false);
@@ -205,6 +209,10 @@ export default function EquipmentBoard({
             <input value={supplier} onChange={(e) => setSupplier(e.target.value)} className="input" />
           </div>
           <div className="flex flex-col gap-1">
+            <label className="text-sm text-gray-700">עלות (₪)</label>
+            <input type="number" min={0} value={cost} onChange={(e) => setCost(e.target.value)} className="input" />
+          </div>
+          <div className="flex flex-col gap-1">
             <label className="text-sm text-gray-700">מתאריך</label>
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input" />
           </div>
@@ -250,6 +258,9 @@ export default function EquipmentBoard({
                   </div>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
                     {range && <span>📅 {range}</span>}
+                    {typeof item.cost === "number" && item.cost > 0 && (
+                      <span>עלות: ₪{item.cost.toLocaleString("he-IL")}</span>
+                    )}
                     {item.supplier && <span>ספק: {item.supplier}</span>}
                   </div>
                 </div>

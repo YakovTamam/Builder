@@ -26,6 +26,7 @@ type ProjectFormValues = {
   lng?: number | null;
   status?: string;
   budget?: number;
+  laborRate?: number;
   startDate?: string | Date | null;
   dueDate?: string | Date | null;
   progress?: number;
@@ -119,6 +120,7 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
   );
   const [status, setStatus] = useState(project?.status ?? "planning");
   const [budget, setBudget] = useState(project?.budget?.toString() ?? "");
+  const [laborRate, setLaborRate] = useState(project?.laborRate?.toString() ?? "");
   const [startDate, setStartDate] = useState(toDateInputValue(project?.startDate));
   const [dueDate, setDueDate] = useState(toDateInputValue(project?.dueDate));
   const [progress, setProgress] = useState(project?.progress?.toString() ?? "0");
@@ -138,6 +140,7 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
       lng: lng.trim() ? Number(lng) : null,
       status,
       budget: budget ? Number(budget) : undefined,
+      laborRate: laborRate ? Number(laborRate) : undefined,
       startDate: startDate || undefined,
       dueDate: dueDate || undefined,
       locations,
@@ -256,7 +259,7 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
 
         <div className="flex flex-col gap-1">
           <label htmlFor="budget" className="text-sm text-gray-700">
-            תקציב (₪)
+            מחיר ללקוח / הצעה (₪)
           </label>
           <input
             id="budget"
@@ -264,6 +267,21 @@ export default function ProjectForm({ project }: { project?: ProjectFormValues }
             min={0}
             value={budget}
             onChange={(e) => setBudget(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="laborRate" className="text-sm text-gray-700">
+            תעריף עבודה (₪ לשעה)
+          </label>
+          <input
+            id="laborRate"
+            type="number"
+            min={0}
+            value={laborRate}
+            onChange={(e) => setLaborRate(e.target.value)}
+            placeholder="לחישוב עלות שעות העבודה"
             className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>

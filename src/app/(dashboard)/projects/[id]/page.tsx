@@ -4,8 +4,12 @@ import { getSession } from "@/lib/session";
 import { connectToDatabase } from "@/lib/db";
 import Project from "@/models/Project";
 import Task from "@/models/Task";
+import Material from "@/models/Material";
+import Equipment from "@/models/Equipment";
+import { computeProjectFinancials } from "@/lib/finance";
 import DeleteProjectButton from "./DeleteProjectButton";
 import WazeButton from "../../WazeButton";
+import ProjectFinancials from "./ProjectFinancials";
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   planning: { label: "בתכנון", className: "bg-gray-100 text-gray-800" },
@@ -50,6 +54,32 @@ export default async function ProjectDetailPage({
   const status = STATUS_LABELS[project.status ?? "planning"];
   const canManage = MANAGE_ROLES.includes(session.role);
 
+  // Cost & margin — managers only. Materials (qty × unit cost), equipment cost,
+  // and labour (summed task hours × the project's rate) vs. the client price.
+  let financials = null;
+  if (canManage) {
+    const [materials, equipment, laborAgg] = await Promise.all([
+      Material.find({ projectId: id }).select("quantity unitCost").lean(),
+      Equipment.find({ projectId: id }).select("cost").lean(),
+      Task.aggregate([
+        { $match: { projectId: project._id } },
+        { $group: { _id: null, hours: { $sum: "$durationHours" } } },
+      ]),
+    ]);
+    const laborHours = laborAgg[0]?.hours ?? 0;
+    financials = {
+      ...computeProjectFinancials({
+        quote: project.budget,
+        materials: materials.map((m) => ({ quantity: m.quantity, unitCost: m.unitCost })),
+        equipment: equipment.map((e) => ({ cost: e.cost })),
+        laborHours,
+        laborRate: project.laborRate,
+      }),
+      laborHours,
+      laborRate: typeof project.laborRate === "number" ? project.laborRate : undefined,
+    };
+  }
+
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
       <div className="flex items-start justify-between gap-2">
@@ -84,11 +114,9 @@ export default async function ProjectDetailPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-xs text-gray-500 mb-1">תקציב</p>
-          <p className="font-medium">{project.budget ? `₪${project.budget.toLocaleString("he-IL")}` : "—"}</p>
-        </div>
+      {financials && <ProjectFinancials data={financials} />}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           <p className="text-xs text-gray-500 mb-1">תאריך התחלה</p>
           <p className="font-medium">

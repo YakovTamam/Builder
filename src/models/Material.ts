@@ -8,6 +8,8 @@ const materialSchema = new Schema(
     name: { type: String, required: true },
     quantity: { type: Number, required: true },
     unit: { type: String },
+    // Cost per unit (₪). Line cost = quantity × unitCost.
+    unitCost: { type: Number },
     supplier: { type: String },
     status: { type: String, enum: MATERIAL_STATUSES, default: "ordered" },
     expectedDate: { type: Date },
