@@ -8,7 +8,9 @@
    ```
    MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>/builder?retryWrites=true&w=majority
    AUTH_SECRET=<מחרוזת אקראית ארוכה וסודית>
+   BLOB_READ_WRITE_TOKEN=<טוקן של Vercel Blob להעלאת תמונות>
    ```
+   > `BLOB_READ_WRITE_TOKEN` נדרש להעלאת תמונות מהשטח. ב-Vercel: **Storage → Create → Blob**, וה-token מוזרק אוטומטית ל-deployment. לפיתוח מקומי הריצו `vercel env pull` או העתיקו את הערך מ-Vercel. ללא הטוקן, שאר המערכת פועלת אך העלאת תמונות תחזיר שגיאה ברורה.
 2. התקן תלויות: `npm install`
 3. הרץ שרת פיתוח: `npm run dev`
 

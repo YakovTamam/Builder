@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import PhotoUploader from "../../PhotoUploader";
 
 type PhotoItem = {
   _id: string;
@@ -19,12 +20,7 @@ export default function TaskPhotos({
 }) {
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [uploading, setUploading] = useState(false);
-
-  const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   const loadPhotos = useCallback(async () => {
     setLoading(true);
@@ -47,70 +43,20 @@ export default function TaskPhotos({
     await fetch(`/api/photos/${id}`, { method: "DELETE" });
   }
 
-  async function uploadDataUrl(dataUrl: string) {
+  // Persist the Photo record once the file has uploaded to Blob storage.
+  async function savePhoto(url: string) {
     setError(null);
-    setUploading(true);
-    try {
-      const res = await fetch("/api/photos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId, taskId, url: dataUrl }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "שגיאה בהעלאת תמונה");
-        return;
-      }
-      setPhotos((prev) => [data.photo, ...prev]);
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setError("יש לבחור קובץ תמונה בלבד");
+    const res = await fetch("/api/photos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projectId, taskId, url }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error ?? "שגיאה בשמירת התמונה");
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      setError("התמונה גדולה מדי (מקסימום 5MB)");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        uploadDataUrl(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!url.trim()) return;
-    setError(null);
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/photos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId, taskId, url }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "שגיאה בהוספת תמונה");
-        return;
-      }
-      setPhotos((prev) => [data.photo, ...prev]);
-      setUrl("");
-    } finally {
-      setSubmitting(false);
-    }
+    setPhotos((prev) => [data.photo, ...prev]);
   }
 
   return (
@@ -139,42 +85,7 @@ export default function TaskPhotos({
       )}
 
       {canUpload && (
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="task-photo-upload"
-            className={`flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-3 py-4 text-sm text-gray-600 hover:border-emerald-400 hover:bg-emerald-50 transition-colors cursor-pointer ${
-              uploading ? "opacity-50 pointer-events-none" : ""
-            }`}
-          >
-            <span className="text-2xl">📷</span>
-            <span>{uploading ? "מעלה תמונה..." : "לחץ להעלאת תמונה ממכשיר"}</span>
-            <input
-              id="task-photo-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              disabled={uploading}
-              className="hidden"
-            />
-          </label>
-
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="או הדבק כתובת תמונה (URL)"
-              className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-            <button
-              type="submit"
-              disabled={submitting || !url.trim()}
-              className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50"
-            >
-              {submitting ? "מוסיף..." : "הוסף"}
-            </button>
-          </form>
-        </div>
+        <PhotoUploader projectId={projectId} onUploaded={savePhoto} label="צלם או העלה תמונה למשימה" />
       )}
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>

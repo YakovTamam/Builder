@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import PhotoUploader from "../PhotoUploader";
 
 type PhotoItem = {
   _id: string;
@@ -25,11 +26,9 @@ export default function PhotoGallery({
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [url, setUrl] = useState("");
   const [stage, setStage] = useState("");
   const [location, setLocation] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   const projectId = selectedProjectId ?? projects[0]?._id;
 
@@ -61,34 +60,29 @@ export default function PhotoGallery({
     await fetch(`/api/photos/${id}`, { method: "DELETE" });
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  // Called once the file has been uploaded to Blob storage: persist the Photo
+  // record with the current stage/location metadata.
+  async function savePhoto(url: string) {
     setError(null);
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/photos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          projectId,
-          url,
-          stage: stage || undefined,
-          location: location || undefined,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "שגיאה בהוספת תמונה");
-        return;
-      }
-      setPhotos((prev) => [data.photo, ...prev]);
-      setUrl("");
-      setStage("");
-      setLocation("");
-      setShowForm(false);
-    } finally {
-      setSubmitting(false);
+    const res = await fetch("/api/photos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        projectId,
+        url,
+        stage: stage || undefined,
+        location: location || undefined,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error ?? "שגיאה בשמירת התמונה");
+      return;
     }
+    setPhotos((prev) => [data.photo, ...prev]);
+    setStage("");
+    setLocation("");
+    setShowForm(false);
   }
 
   return (
@@ -114,46 +108,34 @@ export default function PhotoGallery({
         </button>
       </div>
 
-      {showForm && (
-        <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
-          <div className="flex flex-col gap-1 sm:col-span-3">
-            <label className="text-sm text-gray-700">כתובת תמונה (URL)</label>
-            <input
-              required
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://..."
-              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
+      {showForm && projectId && (
+        <div className="card grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-gray-700">שלב</label>
+            <label className="text-sm text-gray-700">שלב (לא חובה)</label>
             <input
               value={stage}
               onChange={(e) => setStage(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="למשל: שלד"
+              className="input"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm text-gray-700">מיקום</label>
+            <label className="text-sm text-gray-700">מיקום (לא חובה)</label>
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="למשל: בניין A, קומה 3"
+              className="input"
             />
           </div>
-
-          {error && <p className="text-sm text-red-600 sm:col-span-3">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-lg bg-emerald-600 hover:bg-emerald-500 transition-colors text-white px-4 py-2 text-sm font-medium disabled:opacity-50 sm:col-span-3"
-          >
-            {submitting ? "מוסיף..." : "הוסף תמונה"}
-          </button>
-        </form>
+          <div className="sm:col-span-2">
+            <PhotoUploader projectId={projectId} onUploaded={savePhoto} />
+            <p className="mt-2 text-xs text-gray-500">
+              התמונה תישמר עם השלב והמיקום שמילאת. אפשר לצלם ישירות מהנייד.
+            </p>
+          </div>
+          {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
+        </div>
       )}
 
       {loading ? (
