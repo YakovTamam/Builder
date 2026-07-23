@@ -4,7 +4,9 @@ import Material from "@/models/Material";
 import Photo from "@/models/Photo";
 import Project from "@/models/Project";
 import Task from "@/models/Task";
+import Equipment from "@/models/Equipment";
 import { getExpiryStatus, daysUntilExpiry } from "@/lib/documents";
+import { findEquipmentConflicts, type EquipmentBooking } from "@/lib/equipment";
 import { createAndNotifyAlert } from "@/lib/notify";
 
 const NO_RECENT_PHOTOS_DAYS = 7;
@@ -196,6 +198,66 @@ export async function runAlertScan(opts?: { companyId?: string }): Promise<{ cre
     const doc = await Document.findById(documentId).lean();
     const status = getExpiryStatus(doc?.expiryDate, now.getTime());
     if (status !== "expired" && status !== "expiring_soon") {
+      await Alert.updateOne({ _id: alert._id }, { isRead: true });
+      resolved += 1;
+    }
+  }
+
+  // --- Double-booked equipment (same machine, two sites, overlapping dates) ---
+  const equipmentDocs = await Equipment.find({ projectId: { $in: projectIds } })
+    .select("name projectId startDate endDate companyId")
+    .lean();
+
+  // Group bookings per company so machines are never matched across tenants.
+  const bookingsByCompany = new Map<string, EquipmentBooking[]>();
+  for (const e of equipmentDocs) {
+    const companyId = String(e.companyId);
+    const list = bookingsByCompany.get(companyId) ?? [];
+    list.push({
+      id: String(e._id),
+      name: e.name,
+      projectId: String(e.projectId),
+      startDate: e.startDate,
+      endDate: e.endDate,
+    });
+    bookingsByCompany.set(companyId, list);
+  }
+
+  const activeConflictKeys = new Set<string>();
+  for (const [companyId, bookings] of bookingsByCompany) {
+    for (const conflict of findEquipmentConflicts(bookings)) {
+      const nameKey = conflict.name.toLowerCase();
+      activeConflictKeys.add(`${companyId}::${nameKey}`);
+
+      const existing = await Alert.findOne({
+        type: "equipment_conflict",
+        companyId,
+        "metadata.nameKey": nameKey,
+        isRead: false,
+      });
+      if (existing) continue;
+
+      const siteNames = conflict.projectIds
+        .map((pid) => projMap.get(pid)?.name)
+        .filter(Boolean)
+        .join(", ");
+
+      await createAndNotifyAlert({
+        companyId,
+        type: "equipment_conflict",
+        severity: "high",
+        title: `התנגשות ציוד: ${conflict.name}`,
+        description: `המכונה "${conflict.name}" מוזמנת במקביל למספר אתרים (${siteNames}). יש לתאם מחדש.`,
+        metadata: { nameKey, name: conflict.name, projectIds: conflict.projectIds, equipmentIds: conflict.ids },
+      });
+      created += 1;
+    }
+  }
+
+  const openEquipmentAlerts = await Alert.find({ type: "equipment_conflict", isRead: false, ...companyScope }).lean();
+  for (const alert of openEquipmentAlerts) {
+    const nameKey = (alert.metadata as { nameKey?: string } | undefined)?.nameKey ?? "";
+    if (!activeConflictKeys.has(`${String(alert.companyId)}::${nameKey}`)) {
       await Alert.updateOne({ _id: alert._id }, { isRead: true });
       resolved += 1;
     }

@@ -14,6 +14,7 @@ const TYPE_LABELS: Record<string, string> = {
   no_recent_photos: "אין תמונות עדכניות",
   stage_stalled: "שלב תקוע",
   document_expiring: "מסמך/ביטוח פג תוקף",
+  equipment_conflict: "התנגשות ציוד",
 };
 
 type AlertItem = {

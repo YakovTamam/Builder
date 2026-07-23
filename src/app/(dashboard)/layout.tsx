@@ -21,6 +21,7 @@ const BASE_NAV_ITEMS = [
   { href: "/calendar", label: "יומן", icon: "📅" },
   { href: "/photos", label: "תמונות", icon: "📷" },
   { href: "/materials", label: "חומרים", icon: "📦" },
+  { href: "/equipment", label: "ציוד ומכונות", icon: "🚜" },
   { href: "/documents", label: "מסמכים וביטוחים", icon: "📄" },
   { href: "/alerts", label: "התראות", icon: "🔔" },
   { href: "/search", label: "חיפוש", icon: "🔍" },
